@@ -1,0 +1,128 @@
+{% extends 're_use_html_ele.html' %}
+{% load static %}
+{% block title %}Add Source{% endblock %}
+{% block body %}
+{% if error_alert == 'alert' %}
+<div class="alert-red">
+  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+  <label>&#9785;<strong>Error!</strong>  All Fields Are Required</label>
+</div>
+{% endif %}
+{% if sucess == 'inserted' %}
+<div class="alert-green">
+  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+  <label>&#9996;<strong>Inserted</strong>  Data Added Sucessfully!!!</label>
+</div>
+{% endif %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-center add-source">
+    <h2 class="add-source-h">Add Source</h2>
+  </div>
+  <div class="container-fluid border border-success tips">
+    <p><b>Tips: </b><br><b>1. Is English Field: </b> 0=English<b> | </b>1=NonEnglish<b> | </b>2=English &
+      NonEnglish<br>
+      <b>2. Status Field: </b> 1=Working<b> | </b>2=GTS_Maintenance<b> | </b>3=Website_Issue<b> | </b>4=GTS_Stopped<br>
+    </p>
+  </div>
+  <div class="container-fluid">
+    <div class="d-flex justify-content-center ">
+      <div class="shadow-lg p-3 mb-5 bg-white rounded">
+        <form action="Add-source" method="POST">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-md-1 form-group">
+              <label for="source_no">Source No</label>
+              <input type="text" name="source_no" class="form-control" id="source_no" placeholder="Src No">
+              {% if source_no_error == 'not Digit' %}
+              <label style="color: red; font-size: 13px;">Enter Number Only</label>
+              {% endif %}
+            </div>
+            <div class="col-md-3 form-group">
+              <label for="source_name">Source Name</label>
+              <input type="text" name="source_name" class="form-control" id="source_name" placeholder="Source Name">
+            </div>
+            <div class="col-md-2 form-group">
+              <label for="contry_iso">Country ISO</label>
+              <select name="contry_iso" class="drop" id="contry_iso">
+                <option selected="selected" disabled> Select </option>
+                <option value='MULTIPLE'>MULTIPLE</option>
+                {% for country in Country_ISO_list %}
+                <option value={{ country.Code }}>{{ country.Country }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-1 form-group">
+              <label for="avg_tender">AVG</label>
+              <input type="text" name="avg_tender" class="form-control" id="avg_tender" placeholder="AVG">
+              {% if avg_tender_error == 'Blank avg_tender' %}
+              <label style="color: red;">Enter Average</label>
+              {% endif %}
+              {% if avg_tender_error == 'not Digit' %}
+              <label style="color: red; font-size: 13px;">Enter Number Only</label>
+              {% endif %}
+            </div>
+            <div class="col-md-2 form-group">
+              <label for="exe_run_by">EXE Run By</label>
+              <select name="exe_run_by" class="drop" id="exe_run_by">
+                <option selected="selected" disabled> Select </option>
+                {% for user in exe_runby_list %}
+                <option value={{ user.0 }}>{{ user.1 }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2 form-group">
+              <label for="exe_developer">EXE Devloper</label>
+              <select name="exe_developer" class="drop" id="exe_developer">
+                <option selected="selected" disabled> Select </option>
+                {% for user in exe_developer_list %}
+                <option value={{ user.0 }}>{{ user.1 }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2 form-group">
+              <label for="Devloped_language">Devloped Language</label>
+              <select name="Devloped_language" class="drop" id="Devloped_language">
+                <option selected="selected" disabled> Select </option>
+                <option value="C#">C#.NET</option>
+                <option value="Python">Python</option>
+              </select>
+            </div>
+            <div class="col-md-1 form-group">
+              <label for="is_english">Is English</label>
+              <select name="is_english" class="drop" id="is_english">
+                <option selected="selected" disabled> Select </option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+              </select>
+            </div>
+            <div class="col-md-1 form-group">
+              <label for="status">Status</label>
+              <select name="status" class="drop" id="status">
+                <option selected="selected" disabled> Select</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div class="col-md-4 form-group">
+              <label for="tender_url">Tender URL</label>
+              <input type="text" name="tender_url" class="form-control" id="tender_url" placeholder="http://www.tenderurl.com">
+            </div>
+            <div class="col-md-2 form-group">
+              <button type="submit" style="margin-top: 31px;" class="btn btn-outline-success">Add Source</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endblock %}
+  {% block script %}
+  <script>
+    function myFunction() {
+      alert("Hello! I am an alert box!");
+    }
+  </script>
+  {% endblock %}
