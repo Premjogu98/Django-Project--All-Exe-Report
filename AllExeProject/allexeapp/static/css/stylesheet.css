@@ -28,15 +28,22 @@ p{
      border-radius: 0px 58px;
 }
 
-.alert-red {
+.alert-Error {
     padding: 20px;
     background-color: #f44336;
     color: white;
     margin-top: 10px;
   }
-  .alert-green {
+  .alert-Success {
     padding: 20px;
     background-color: #0aeb45;
+    color: black;
+    margin-top: 10px;
+  }
+
+  .alert-Duplicate {
+    padding: 20px;
+    background-color: #fbff00;
     color: black;
     margin-top: 10px;
   }
@@ -54,4 +61,28 @@ p{
   
   .closebtn:hover {
     color: black;
+  }
+#example_filter label{
+  width: 50%;
+}
+#example_filter input{
+  width: 80%;
+}
+tr:nth-of-type(odd){
+  background-color: #00e7ff;
+}
+tr{
+transition: box-shadow .3s;}
+tr:hover{
+  box-shadow: 5px 10px 5px rgb(0 0 0 / 17%);
+
+}
+td:nth-child(3){
+text-align: center;
+}
+td:nth-child(4){
+  text-align: center;
+  }
+td:nth-child(1){
+  text-align: center;
   }

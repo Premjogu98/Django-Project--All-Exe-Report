@@ -3,7 +3,15 @@
 {% load static %}
 
 {% block title %} Source List {% endblock %}
+{% block head %}
+<link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
 
+{% endblock %}
 
 {% block body %}
 <div class="container-fluid">
@@ -11,130 +19,42 @@
         <h2 class="source-list-h">Source list</h2>
     </div>
     <div class="table-responsive-sm">
-        <table class="table table-hover">
+        <table id="example" class="table table-striped table-bordered" style="width:100%">
             <thead>
                 <tr>
-                    <th scope="col">No</th>
-                    <th scope="col">Source No</th>
-                    <th scope="col">Source Name</th>
-                    <th scope="col">Exe Run By</th>
-                    <th scope="col">Exe Developer</th>
-                    <th scope="col">Is English</th>
-                    <th scope="col">Tender URL</th>
-                    <th scope="col">Filter</th>
+                    <th>EXE No</th>
+                    <th>Source Name</th>
+                    <th>Exe Run By</th>
+                    <th>Exe Developer</th>
+                    <th>Tender URL</th>
+                    <th>View/Update</th>
                 </tr>
             </thead>
             <tbody>
-                {% for detail in source_data_list %}
+                {% for source_detail in source_data_list %}
                 <tr>
-                    <th scope="row">{{ detail.0 }}</th>
-                    <td>{{ detail.1 }}</td>
-                    <td>{{ detail.2 }}</td>
-                    <td>{{ detail.5 }}</td>
-                    <td>{{ detail.6 }}</td>
-                    <td>{{ detail.8 }}</td>
-                    {% if detail.12|length > 40 %}
-                    <td><a href="{{ detail.12 }}">{{ detail.12|slice:40 }}...</a></td>
+                    <td>{{ source_detail.0 }}</td>
+                    <td>{{ source_detail.1 }}</td>
+                    <td>{{ source_detail.3 }}</td>
+                    <td>{{ source_detail.4 }}</td>
+                    {% if source_detail.2|length > 70 %}
+                    <td><a href="{{ source_detail.2 }}">{{ source_detail.2|slice:70 }}...</a></td>
                     {% else %}
-                    <td><a href="{{ detail.12 }}">{{ detail.12 }}</a></td>
+                    <td><a href="{{ source_detail.2 }}">{{ source_detail.2 }}</a></td>
                     {% endif %}
-                    <td>
-                        <div class="col">
-                            <button type="button" class="btn btn-outline-info">View More</button>
-                            <button type="button" class="btn btn-outline-warning" data-toggle="modal" data-target="#myModal">Update</button>
-                        </div>
-
-                    </td>
+                    <td><button type="button" class="btn btn-outline-dark">View/Update</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    <!-- Modal -->
-    <div class="modal fade" id="myModal" role="dialog">
-        <div class="modal-dialog">
-
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Update Source Details</h4>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div>
-                        <label for="source_no">Source No</label>
-                        <input type="text" name="source_no" class="form-control" id="source_no" placeholder="Src No">
-                    </div>
-                    <div>
-                        <label for="source_name">Source Name</label>
-                        <input type="text" name="source_name" class="form-control" id="source_name" placeholder="Source Name"></div>
-                    <div>
-                        <label for="contry_iso">Country ISO</label>
-                        <select name="contry_iso" class="drop" id="contry_iso">
-                          <option selected="selected" disabled> Select </option>
-                          <option value='MULTIPLE'>MULTIPLE</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="avg_tender">AVG</label>
-                        <input type="text" name="avg_tender" class="form-control" id="avg_tender" placeholder="AVG">
-                    </div>
-                    <div>
-                        <label for="exe_run_by">EXE Run By</label>
-                        <select name="exe_run_by" class="drop" id="exe_run_by">
-                            <option selected="selected" disabled> Select </option>
-                            <option value='MULTIPLE'>MULTIPLE</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="exe_developer">EXE Devloper</label>
-                        <select name="exe_developer" class="drop" id="exe_developer">
-                            <option selected="selected" disabled> Select </option>
-                            <option value='MULTIPLE'>MULTIPLE</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="Devloped_language">Devloped Language</label>
-                        <select name="Devloped_language" class="drop" id="Devloped_language">
-                            <option selected="selected" disabled> Select </option>
-                            <option value="C#">C#.NET</option>
-                            <option value="Python">Python</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="is_english">Is English</label>
-                        <select name="is_english" class="drop" id="is_english">
-                            <option selected="selected" disabled> Select </option>
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="status">Status</label>
-                        <select name="status" class="drop" id="status">
-                            <option selected="selected" disabled> Select</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="tender_url">Tender URL</label>
-                        <input type="text" name="tender_url" class="form-control" id="tender_url" placeholder="http://www.tenderurl.com">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-outline-success">Update</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
 </div>
-
 {% endblock %}
 
-{% block script %} {% endblock %}
+{% block script %}
+<script>
+    $(document).ready(function () {
+        $('#example').DataTable();
+    });
+</script>
+{% endblock %}

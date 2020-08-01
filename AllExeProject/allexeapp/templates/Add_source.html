@@ -3,15 +3,27 @@
 {% block title %}Add Source{% endblock %}
 {% block body %}
 {% if error_alert == 'alert' %}
-<div class="alert-red">
+<div class="alert-Error">
   <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
   <label>&#9785;<strong>Error!</strong>  All Fields Are Required</label>
 </div>
 {% endif %}
 {% if sucess == 'inserted' %}
-<div class="alert-green">
+<div class="alert-Success">
   <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
   <label>&#9996;<strong>Inserted</strong>  Data Added Sucessfully!!!</label>
+</div>
+{% endif %}
+{% if Duplicate_source_name == 'Duplicate source name' %}
+<div class="alert-Duplicate">
+  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+  <label>&#9785;<strong>Duplicate</strong>  This Source Name Already Exits Please Insert New Source !!!</label>
+</div>
+{% endif %}
+{% if Duplicate_source_no == 'Duplicate source no' %}
+<div class="alert-Duplicate">
+  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+  <label>&#9785;<strong>Duplicate</strong>  This Source Number already Exits Please Insert New Source !!!</label>
 </div>
 {% endif %}
 <div class="container-fluid">
