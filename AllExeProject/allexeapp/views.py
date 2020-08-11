@@ -197,8 +197,28 @@ def source_details(request):
         source_list_text = request.POST['source_list_text']
         source_list_text = source_list_text.replace(',',',,')
         selected_source_list = source_list_text.split(',,')
-        print(selected_source_list)
-        return JsonResponse(selected_source_list, safe=False)
+        # print(selected_source_list)
+        source_list_count = []
+        i = 0
+        for source_name in selected_source_list:
+            a = 0 
+            while a == 0 :
+                try:
+                    exe_DB_cursor = connection.cursor()
+                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name)}' AND DATE(added_on) = CURDATE()")
+                    data = exe_DB_cursor.fetchone()
+                    data_list = list(data)
+                    print(f'{i}:{source_name}, {data_list[0]}')
+                    test_list = [str(source_name),str(data_list[0])] # Multidimenstion Array
+                    source_list_count.append(test_list)
+                    i += 1
+                    a = 1
+                except Exception as e:
+                    print(e)
+                    connection.close()
+                    time.sleep(2)
+                    a = 0 
+        return JsonResponse(source_list_count, safe=False)
     
         
     return render(request, 'source_details.html',data)

@@ -358,7 +358,7 @@
                     <input type="text" style="display: none;" id='source-list-text' value=""/>
                     <label style="font-size: 20px;">From: &nbsp;</label><input type="date"/>
                     <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input type="date"/>&nbsp;&nbsp;
-                    <button type="button" id='source-list-get-data' class="btn btn-outline-primary">Get Data</button>
+                    <button type="button" id='source-list-get-data' class="btn btn-outline-primary" data-toggle="collapse" data-target="#source-list-div">Get Data</button>
                   </div>
             </div>
         </div>
@@ -419,7 +419,14 @@
                 csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
             },
             success:function(return_data){
-                alert("My source list are: " + return_data);}
+
+                return_data.forEach(myFunction);
+
+                function myFunction(item) {
+                var addtr = "<tr><td>" + item[0] + "</td><td>" + item[1] + "</td></tr>";
+                $("#main-source-tbl > tbody").append(addtr);
+                }
+            }
             });
         });
     });
