@@ -10,6 +10,7 @@ from django.http import JsonResponse
 import datetime
 import time
 
+
 from django.urls import reverse
 
 from datetime import datetime as datetime_now
@@ -190,30 +191,15 @@ def source_details(request):
     exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
     data = exe_DB_cursor.fetchall()
     source_list = [list(tup) for tup in data]
-    source_list = list(data)
     # print(source_list)
-
-    # i = 0
-    # source_count = []
-    # for source in source_list[0:10]:
-    #     a = 0 
-    #     while a == 0 :
-    #         try:
-    #             exe_DB_cursor = connection.cursor()
-    #             exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) = CURDATE()")
-    #             data = exe_DB_cursor.fetchone()
-    #             data_list = list(data)
-    #             print(f'{i}:{source[0]}, {data_list[0]}')
-    #             test_list = [str(source[0]),str(data_list[0])] # Multidimenstion Array
-    #             source_count.append(test_list)
-    #             i += 1
-    #             a = 1
-    #         except Exception as e:
-    #             print(e)
-    #             connection.close()
-    #             time.sleep(2)
-    #             a = 0 
-    data = {'source_list':source_list,'sourcelist_len':len(source_list)}
+    data = {'source_list':source_list[0:100]}
+    if request.method == 'POST':
+        source_list_text = request.POST['source_list_text']
+        source_list_text = source_list_text.replace(',',',,')
+        selected_source_list = source_list_text.split(',,')
+        print(selected_source_list)
+        return JsonResponse(selected_source_list, safe=False)
+    
         
     return render(request, 'source_details.html',data)
 
