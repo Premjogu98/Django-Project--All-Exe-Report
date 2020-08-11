@@ -1,32 +1,13 @@
 {% extends 're_use_html_ele.html' %}
 {% load static %}
 {% block title %}Add Source{% endblock %}
+
 {% block body %}
-{% if error_alert == 'alert' %}
-<div class="alert-Error">
-  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-  <label>&#9785;<strong>Error!</strong>  All Fields Are Required</label>
+
+<div id="alert" class="alert-Error" style="display: none;">
 </div>
-{% endif %}
-{% if sucess == 'inserted' %}
-<div class="alert-Success">
-  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-  <label>&#9996;<strong>Inserted</strong>  Data Added Sucessfully!!!</label>
-</div>
-{% endif %}
-{% if Duplicate_source_name == 'Duplicate source name' %}
-<div class="alert-Duplicate">
-  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-  <label>&#9785;<strong>Duplicate</strong>  This Source Name Already Exits Please Insert New Source !!!</label>
-</div>
-{% endif %}
-{% if Duplicate_source_no == 'Duplicate source no' %}
-<div class="alert-Duplicate">
-  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-  <label>&#9785;<strong>Duplicate</strong>  This Source Number already Exits Please Insert New Source !!!</label>
-</div>
-{% endif %}
-<div class="container-fluid">
+
+<div class="container-fluid" id='Top-div'>
   <div class="d-flex justify-content-center add-source">
     <h2 class="add-source-h">Add Source</h2>
   </div>
@@ -39,15 +20,13 @@
   <div class="container-fluid">
     <div class="d-flex justify-content-center ">
       <div class="shadow-lg p-3 mb-5 bg-white rounded">
-        <form action="Add-source" method="POST">
+        <form id="Add-source" method="POST">
           {% csrf_token %}
           <div class="row">
             <div class="col-md-1 form-group">
               <label for="source_no">Source No</label>
-              <input type="text" name="source_no" class="form-control" id="source_no" placeholder="Src No">
-              {% if source_no_error == 'not Digit' %}
-              <label style="color: red; font-size: 13px;">Enter Number Only</label>
-              {% endif %}
+              <input type="text" name="source_no" class="form-control" id="source_no" placeholder="Src No">  
+              <label id="numberonly" style="color: red; font-size: 13px; display: none;">Enter Number Only</label>
             </div>
             <div class="col-md-3 form-group">
               <label for="source_name">Source Name</label>
@@ -66,12 +45,8 @@
             <div class="col-md-1 form-group">
               <label for="avg_tender">AVG</label>
               <input type="text" name="avg_tender" class="form-control" id="avg_tender" placeholder="AVG">
-              {% if avg_tender_error == 'Blank avg_tender' %}
-              <label style="color: red;">Enter Average</label>
-              {% endif %}
-              {% if avg_tender_error == 'not Digit' %}
-              <label style="color: red; font-size: 13px;">Enter Number Only</label>
-              {% endif %}
+              <label style="color: red; font-size: 13px; display: none;">Enter Number Only</label>
+              
             </div>
             <div class="col-md-2 form-group">
               <label for="exe_run_by">EXE Run By</label>
@@ -91,6 +66,7 @@
                 {% endfor %}
               </select>
             </div>
+            
             <div class="col-md-2 form-group">
               <label for="Devloped_language">Devloped Language</label>
               <select name="Devloped_language" class="drop" id="Devloped_language">
@@ -118,23 +94,83 @@
                 <option value="4">4</option>
               </select>
             </div>
-            <div class="col-md-4 form-group">
-              <label for="tender_url">Tender URL</label>
-              <input type="text" name="tender_url" class="form-control" id="tender_url" placeholder="http://www.tenderurl.com">
+            <div class="col-md-5 form-group">
+              <label for="tender_url">Source URL</label>
+              <input type="text" name="tender_url" class="form-control" id="tender_url"
+                placeholder="http://www.tenderurl.com">
             </div>
+            <div class="col-md-8 form-group">
+              <label for="remark">Remark</label>
+              <textarea class="form-control" name="remark" id="remark" rows="4"></textarea>
+          </div>
             <div class="col-md-2 form-group">
-              <button type="submit" style="margin-top: 31px;" class="btn btn-outline-success">Add Source</button>
+              <div id="adjust-div" style="width: 151px;">
+                <button type="submit" id="add-source" style="margin-top: 31px;" class="btn btn-outline-success">Add Source</button>
+                <div id="add_data_loader" class="spinner-border text-success float-right" style="display: none;" role="status">
+                  <span class="sr-only">Loading...</span>
+                </div>
+              </div>
             </div>
           </div>
         </form>
       </div>
     </div>
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   {% endblock %}
   {% block script %}
+  <!-- <script>
+    setTimeout(function(){
+  if ($('#alert').length > 0) {
+    $('#alert').remove();
+  }
+}, 8000)
+  </script> -->
   <script>
-    function myFunction() {
-      alert("Hello! I am an alert box!");
-    }
-  </script>
+    $(document).on('submit','#Add-source',function(e){
+      $('#add_data_loader').css({'display':'block','margin-top': '33px'});
+      $('#adjust-div').css({'width':'181px'});
+      $("#add-source").html('Adding Source....')
+      e.preventDefault();
+      $.ajax({
+        type:"POST",
+        url:"Add-source",
+        data:{
+          source_no:$.trim($('#source_no').val()),
+          source_name:$('#source_name').val(),
+          contry_iso:$('#contry_iso').val(),
+          avg_tender:$('#avg_tender').val(),
+          exe_run_by:$('#exe_run_by').val(),
+          exe_developer:$('#exe_developer').val(),
+          Devloped_language:$('#Devloped_language').val(),
+          is_english:$('#is_english').val(),
+          status:$('#status').val(),
+          tender_url:$('#tender_url').val(),
+          remark:$('#remark').val(),
+          csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+          // action: 'post'
+        },
+        success:function(return_data){
+          if(return_data == 'Data Added')
+          {
+              $('#alert').html('<div class="alert alert-success alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button><strong>Inserted </strong> &#128591  Data Added Sucessfully!!!  &#128591</div>');
+              $('#alert').css('display', 'block');
+              $('#Add-source')[0].reset();
+              $('#add_data_loader').css({'display':'none'});
+              $("#add-source").html('Add Source')
+              $('#adjust-div').css({'width':'151px'});
+          }
+          else
+          {
+            $('#alert').html('<div class="alert alert-danger alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button>&#128545<strong>Error!</strong> '+return_data+'</div>');
+            $('#alert').css({'display':'block','margin-bottom': '3px'});
+            $('#add_data_loader').css({'display':'none'});
+            $("#add-source").html('Add Source')
+            $('#adjust-div').css({'width':'151px'});
+          }
+        }
+      });
+    });
+</script>
   {% endblock %}

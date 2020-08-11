@@ -14,6 +14,7 @@
 {% endblock %}
 
 {% block body %}
+{% csrf_token %}
 <div class="container-fluid">
     <div class="d-flex justify-content-center source-list">
         <h2 class="source-list-h">Source list</h2>
@@ -26,35 +27,256 @@
                     <th>Source Name</th>
                     <th>Exe Run By</th>
                     <th>Exe Developer</th>
-                    <th>Tender URL</th>
+                    <th>Source URL</th>
                     <th>View/Update</th>
                 </tr>
             </thead>
             <tbody>
                 {% for source_detail in source_data_list %}
                 <tr>
-                    <td>{{ source_detail.0 }}</td>
                     <td>{{ source_detail.1 }}</td>
-                    <td>{{ source_detail.3 }}</td>
+                    <td>{{ source_detail.2 }}</td>
                     <td>{{ source_detail.4 }}</td>
-                    {% if source_detail.2|length > 70 %}
-                    <td><a href="{{ source_detail.2 }}">{{ source_detail.2|slice:70 }}...</a></td>
+                    <td>{{ source_detail.5 }}</td>
+                    {% if source_detail.3|length > 70 %}
+                    <td><a href="{{ source_detail.3 }}">{{ source_detail.3|slice:70 }}...</a></td>
                     {% else %}
-                    <td><a href="{{ source_detail.2 }}">{{ source_detail.2 }}</a></td>
+                    <td><a href="{{ source_detail.3 }}">{{ source_detail.3 }}</a></td>
                     {% endif %}
-                    <td><button type="button" class="btn btn-outline-dark">View/Update</button></td>
+                    <td><button type="button" onclick="LoadModalData('{{ source_detail.0 }}')" data-toggle="modal" data-target="#updateviewmodel" class="btn btn-outline-dark">View/Update</button></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
-{% endblock %}
 
-{% block script %}
-<script>
-    $(document).ready(function () {
-        $('#example').DataTable();
+    <!-- Modal -->
+    <div class="modal fade" id="updateviewmodel" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #00e7ff;">
+                    <h4 class="modal-title">View / Update Data</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="d-flex justify-content-center ">
+                            <form action="Add-source" method="POST">
+                                {% csrf_token %}
+                                <div id="alert" style="display: none;" style="margin-bottom: 32px;">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-1 form-group">
+                                        <label for="source_no">Source No</label>
+                                        <input type="text" name="source_no" class="form-control" id="source_no"placeholder="Src No">
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label for="source_name">Source Name</label>
+                                        <input type="text" name="source_name" class="form-control" id="source_name"
+                                            placeholder="Source Name">
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label for="contry_iso">Country ISO</label>
+                                        <select name="contry_iso" class="drop" id="contry_iso">
+                                            <option selected="selected" disabled> Select </option>
+                                            <option value='MULTIPLE'>MULTIPLE</option>
+                                            {% for country in Country_ISO_list %}
+                                            <option value={{ country.Code }}>{{ country.Country }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1 form-group">
+                                        <label for="avg_tender">AVG</label>
+                                        <input type="text" name="avg_tender" class="form-control" id="avg_tender" placeholder="AVG">
+                                    </div>
+                                    <div class="col-md-2 form-group">
+                                        <label for="exe_run_by">EXE Run By</label>
+                                        <select name="exe_run_by" class="drop" id="exe_run_by">
+                                            <option selected="selected" disabled> Select </option>
+                                            {% for user in exe_runby_list %}
+                                            <option value={{ user.0 }}>{{ user.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 form-group">
+                                        <label for="exe_developer">EXE Devloper</label>
+                                        <select name="exe_developer" class="drop" id="exe_developer">
+                                            <option selected="selected" disabled> Select </option>
+                                            {% for user in exe_developer_list %}
+                                            <option value={{ user.0 }}>{{ user.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 form-group">
+                                        <label for="Devloped_language">Devloped Language</label>
+                                        <select name="Devloped_language" class="drop" id="Devloped_language">
+                                            <option selected="selected" disabled> Select </option>
+                                            <option value="C#">C#.NET</option>
+                                            <option value="Python">Python</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1 form-group">
+                                        <label for="is_english">Is English</label>
+                                        <select name="is_english" class="drop" id="is_english">
+                                            <option selected="selected" disabled> Select </option>
+                                            <option value="0">0</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1 form-group">
+                                        <label for="status">Status</label>
+                                        <select name="status" class="drop" id="status">
+                                            <option selected="selected" disabled> Select</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 form-group">
+                                        <label for="tender_url">Source URL</label>
+                                        <input type="text" name="tender_url" class="form-control" id="tender_url" placeholder="http://www.tenderurl.com">
+                                    </div>
+                                    <div class="col-md-2 form-group">
+                                        <label for="update_date">Update Date</label><br>
+                                        <input type="date" id='update_date' name="update_date" style="width: 100%;height: 36px;"><br>
+                                      </div>
+                                    <div class="col-md-2 form-group">
+                                        <label for="Last_date">Last Update</label>
+                                        <label id='Last_date' style="color: red;"></label>
+                                    </div>
+                                    <div class="col-md-8 form-group">
+                                        <label for="remark">Remark</label>
+                                        <textarea class="form-control" name="remark" id="remark" rows="4"></textarea>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                        <input type="hidden" id="rowid" value=""/>
+                        <button type="button" id='update_btn' class="btn btn-outline-success" onclick="updatemodal()">Update</button>
+                        <div id="update_loader" class="spinner-border text-success" style="display: none;" role="status">
+                            <span class="sr-only">Loading...</span>
+                          </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <footer style="margin-top: 60px;">
+        
+      </footer>
+</div>
+    {% endblock %}
+
+    {% block script %}
+    <script>
+        $(document).ready(function () {
+            $('#example').DataTable();
+        });
+    </script>
+
+    <script>
+    function clear_modal_elements(id_name) {
+        jQuery("#"+id_name).find(':input').each(function() {
+            switch(this.type) {
+                case 'password':
+                case 'text':
+                case 'textarea':
+                case 'file':
+                case 'select-one':
+                case 'select-multiple':
+                case 'date':
+                case 'number':
+                case 'tel':
+                case 'email':
+                case 'hidden':
+                    jQuery(this).val('');
+                    break;
+                case 'checkbox':
+                case 'radio':
+                    this.checked = false;
+                    break;
+            }
+        });
+    }
+    function LoadModalData(id){
+    // document.getElementById('statuslbl').innerHTML = '';
+    clear_modal_elements("updateviewmodel");
+    $('#alert').css({'display':'none'});
+    $.ajax({
+        url: "load-data-on-model",
+        method: "POST",  
+        data: 
+        {
+          id: id,
+          csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+        },
+        success: function(responsedata)
+        {
+            $('#rowid').val(responsedata[0][0]);
+            $('#source_no').val(responsedata[0][1]);  
+            $('#source_name').val(responsedata[0][2]);
+            $('#contry_iso').val(responsedata[0][3]);  
+            $('#avg_tender').val(responsedata[0][4]);
+            $('#exe_run_by').val(responsedata[0][5]);
+            $('#exe_developer').val(responsedata[0][6]);
+            $('#Devloped_language').val(responsedata[0][7]);
+            $('#is_english').val(responsedata[0][8]);
+            $('#status').val(responsedata[0][9]);
+            $('#tender_url').val(responsedata[0][12]);
+            $('#Last_date').html(responsedata[0][11]);
+            $('#remark').val(responsedata[0][13]);
+        }
     });
+    }
 </script>
-{% endblock %}
+<script>
+    function updatemodal(){
+        $("#update_loader").css("display", "block")
+        $("#update_btn").html('Please Wait Updating....')
+        $.ajax({
+            type:"POST",
+            url:"update-model-data",
+            data:{
+                rowid:$.trim($('#rowid').val()),
+                source_no:$.trim($('#source_no').val()),
+                source_name:$('#source_name').val(),
+                contry_iso:$('#contry_iso').val(),
+                avg_tender:$('#avg_tender').val(),
+                exe_run_by:$('#exe_run_by').val(),
+                exe_developer:$('#exe_developer').val(),
+                Devloped_language:$('#Devloped_language').val(),
+                is_english:$('#is_english').val(),
+                status:$('#status').val(),
+                tender_url:$('#tender_url').val(),
+                update_date:$('#update_date').val(),
+                remark:$('#remark').val(),
+                csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+            },
+            success:function(return_data){
+                
+                if(return_data == 'Update Data')
+                {
+                    $('#alert').html('<div class="alert alert-success alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button><strong>Inserted &nbsp;</strong> &#128591 &nbsp; Data Updated Sucessfully!!! &nbsp; &#128591</div>');
+                    $('#alert').css({'display':'block','margin-bottom': '40px'});
+                    $("#update_loader").css("display", "none");
+                    $("#update_btn").html('Update');
+                }
+                else
+                {
+                    $('#alert').html('<div class="alert alert-danger alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button>&#128545<strong>Error!</strong> &nbsp; &nbsp;'+return_data+'</div>');
+                    $('#alert').css({'display':'block','margin-bottom': '40px'});
+                    $("#update_loader").css("display", "none");
+                    $("#update_btn").html('Update');
+                }
+            }
+        });
+    }
+</script>
+    {% endblock %}
