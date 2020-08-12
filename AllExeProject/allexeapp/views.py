@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse,HttpResponseRedirect
+from django.http import HttpResponse
 # Create your views here.
 from django.db import connection
 import pymysql.cursors
@@ -8,12 +8,9 @@ import time
 import json
 from django.http import JsonResponse
 import datetime
+from datetime import timedelta 
 import time
-
-
-from django.urls import reverse
-
-from datetime import datetime as datetime_now
+from datetime import datetime as datetime_obj
 def country_db_connection():
     a = 0
     while a == 0:
@@ -109,7 +106,7 @@ def update_model(request):
         update_date = request.POST['update_date']
         
         if update_date != '':
-            now = datetime_now.now()
+            now = datetime_obj.now()
             time = now.strftime("%H:%M:%S")
             main_update_date = update_date + " " + time
             update_date_timestamp = datetime.datetime.strptime(main_update_date, '%Y-%m-%d %H:%M:%S')
@@ -192,34 +189,218 @@ def source_details(request):
     data = exe_DB_cursor.fetchall()
     source_list = [list(tup) for tup in data]
     # print(source_list)
-    data = {'source_list':source_list[0:100]}
+    data = {'source_list':source_list[0:10]}
+    
     if request.method == 'POST':
         source_list_text = request.POST['source_list_text']
+        from_date = request.POST['drop_from_date']
+        to_date = request.POST['drop_to_date']
+        print(source_list_text)
         source_list_text = source_list_text.replace(',',',,')
         selected_source_list = source_list_text.split(',,')
         # print(selected_source_list)
-        source_list_count = []
-        i = 0
-        for source_name in selected_source_list:
-            a = 0 
-            while a == 0 :
-                try:
-                    exe_DB_cursor = connection.cursor()
-                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name)}' AND DATE(added_on) = CURDATE()")
-                    data = exe_DB_cursor.fetchone()
-                    data_list = list(data)
-                    print(f'{i}:{source_name}, {data_list[0]}')
-                    test_list = [str(source_name),str(data_list[0])] # Multidimenstion Array
-                    source_list_count.append(test_list)
-                    i += 1
-                    a = 1
-                except Exception as e:
-                    print(e)
-                    connection.close()
-                    time.sleep(2)
+        if from_date != "" and to_date != "":
+            table_html = ''
+            table_th = ""
+            source_name_with_count = ''
+            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
+            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
+            diff_date = to_date_datetime_obj - from_date_obj
+            diff_date = diff_date.days
+            
+            for date in range(int(diff_date)+1):
+                date_month = from_date_obj.strftime("%d-%b")
+                table_th += f"<th>{str(date_month)}</th>"
+                from_date_obj = from_date_obj + timedelta(days=1)
+
+            for source_name in selected_source_list:
+                m_count_td  = ''
+                m_source_name_count = f'<tr><td>{str(source_name)}</td>'
+                m_source_count = 0
+                from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
+                # main_date = from_date_obj.strftime("%Y-%m-%d")
+                for date in range(int(diff_date)+1):
+                    main_date = from_date_obj.strftime("%Y-%m-%d")
                     a = 0 
-        return JsonResponse(source_list_count, safe=False)
+                    while a == 0 :
+                        try:
+                            exe_DB_cursor = connection.cursor()
+                            exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name).strip()}' AND DATE(added_on) = '{str(main_date).strip()}'")
+                            data = exe_DB_cursor.fetchone()
+                            data_list = list(data)
+                            m_count_td += f'<td>{data_list[0]}</td>'
+                            m_source_count += int(data_list[0])
+                            a = 1
+                        except Exception as e:
+                            print(e)
+                            connection.close()
+                            time.sleep(2)
+                            a = 0 
+                    print(f'Done: {source_name}')
+                    from_date_obj = from_date_obj + timedelta(days=1)
+                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                    
+
+            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;>
+                        <thead>
+                            <tr style="background: #00e7ff;">
+                                <th>Source Name</th>
+                                {str(table_th)}
+                                <th>Total</th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {str(source_name_with_count)}
+                        </tbody>
+                    </table>"""
+            return JsonResponse(str(table_html), safe=False)
+        
+        else :
+            source_name_with_count = ""
+            now = datetime_obj.now()
+            main_date = now.strftime("%d-%B-%Y")
+            for source_name in selected_source_list:
+                m_count_td  = ''
+                m_source_name_count = f'<tr><td>{str(source_name)}</td>'
+                m_source_count = 0
+                a = 0 
+                while a == 0 :
+                    try:
+                        exe_DB_cursor = connection.cursor()
+                        exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name).strip()}' AND DATE(added_on) = CURDATE()")
+                        data = exe_DB_cursor.fetchone()
+                        data_list = list(data)
+                        m_count_td += f'<td>{data_list[0]}</td>'
+                        m_source_count += int(data_list[0])
+                        a = 1
+                    except Exception as e:
+                        print(e)
+                        connection.close()
+                        time.sleep(2)
+                        a = 0 
+                print(f'Done: {source_name}')
+                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                    
+            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;">
+                        <thead>
+                            <tr style="background: #00e7ff;">
+                                <th>Source Name</th>
+                                <th>{str(main_date)}</th> 
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {str(source_name_with_count)}
+                        </tbody>
+                    </table>"""
+            
+            return JsonResponse(str(table_html), safe=False)
     
         
     return render(request, 'source_details.html',data)
 
+
+def All_source_details(request):
+    exe_DB_cursor = connection.cursor()
+    exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
+    data = exe_DB_cursor.fetchall()
+    source_list = [list(tup) for tup in data]
+    if request.method == 'POST':
+        from_date = request.POST['from_date']
+        to_date = request.POST['to_date']
+        if from_date != "" and to_date != "":
+            table_html = ''
+            table_th = ""
+            source_name_with_count = ''
+            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
+            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
+            diff_date = to_date_datetime_obj - from_date_obj
+            diff_date = diff_date.days
+            
+            for date in range(int(diff_date)+1):
+                date_month = from_date_obj.strftime("%d-%b")
+                table_th += f"<th>{str(date_month)}</th>"
+                from_date_obj = from_date_obj + timedelta(days=1)
+
+            for source_name in source_list[0:10]:
+                m_count_td  = ''
+                m_source_name_count = f'<tr><td>{str(source_name[0])}</td>'
+                m_source_count = 0
+                from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
+                # main_date = from_date_obj.strftime("%Y-%m-%d")
+                for date in range(int(diff_date)+1):
+                    main_date = from_date_obj.strftime("%Y-%m-%d")
+                    a = 0 
+                    while a == 0 :
+                        try:
+                            exe_DB_cursor = connection.cursor()
+                            exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND DATE(added_on) = '{str(main_date).strip()}'")
+                            data = exe_DB_cursor.fetchone()
+                            data_list = list(data)
+                            m_count_td += f'<td>{data_list[0]}</td>'
+                            m_source_count += int(data_list[0])
+                            a = 1
+                        except Exception as e:
+                            print(e)
+                            connection.close()
+                            time.sleep(2)
+                            a = 0 
+                    print(f'Done: {source_name[0]}')
+                    from_date_obj = from_date_obj + timedelta(days=1)
+                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                    
+
+            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;>
+                        <thead >
+                            <tr style="background: #00e7ff;">
+                                <th>Source Name</th>
+                                {str(table_th)}
+                                <th>Total</th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {str(source_name_with_count)}
+                        </tbody>
+                    </table>"""
+            return JsonResponse(str(table_html), safe=False)
+        
+        else :
+            source_name_with_count = ""
+            now = datetime_obj.now()
+            main_date = now.strftime("%d-%B-%Y")
+            for source_name in source_list[0:10]:
+                m_count_td  = ''
+                m_source_name_count = f'<tr><td>{str(source_name[0])}</td>'
+                m_source_count = 0
+                a = 0 
+                while a == 0 :
+                    try:
+                        exe_DB_cursor = connection.cursor()
+                        exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND DATE(added_on) = CURDATE()")
+                        data = exe_DB_cursor.fetchone()
+                        data_list = list(data)
+                        m_count_td += f'<td>{data_list[0]}</td>'
+                        m_source_count += int(data_list[0])
+                        a = 1
+                    except Exception as e:
+                        print(e)
+                        connection.close()
+                        time.sleep(2)
+                        a = 0 
+                print(f'Done: {source_name[0]}')
+                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                    
+            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;">
+                        <thead>
+                            <tr>
+                                <th>Source Name</th>
+                                <th>{str(main_date)}</th> 
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {str(source_name_with_count)}
+                        </tbody>
+                    </table>"""
+            
+            return JsonResponse(str(table_html), safe=False)

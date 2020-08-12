@@ -16,16 +16,16 @@
     <div class="d-flex justify-content-center source-list">
         <h2 class="source-list-h">Source list</h2>
     </div>
-    <div class="row">
+    <div class="row" style="border-bottom: 1px solid black;">
         <div class="col-lg-7" style="margin-bottom: 7px;">
             <label>Source Count: <label id="source_count" style="color: red;">{{source_list|length}}</label></label>&nbsp;&nbsp;
             <button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target="#source-list-div">Show Source List</button>
         </div>
         
         <div class="col-lg-5" style="text-align: right; margin-bottom: 7px;">  
-                <!-- <label style="font-size: 20px;">From: &nbsp;</label><input type="date"/>
-                <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input type="date"/>&nbsp;&nbsp;
-                <button type="button" id='source-list-btn' class="btn btn-outline-primary" style="width: 100px;">Search</button> -->
+                <label style="font-size: 20px;">From: &nbsp;</label><input id='from_date' type="date"/>
+                <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input id='to_date' type="date"/>&nbsp;&nbsp;
+                <button type="button" id='source-list-btn' class="btn btn-outline-primary" style="width: 100px;">Search</button>
         </div>
 
     </div>
@@ -355,23 +355,36 @@
                     {% endif %}    
                 {% endfor %}
                 <div class="source-list-footer">
-                    <input type="text" style="display: none;" id='source-list-text' value=""/>
-                    <label style="font-size: 20px;">From: &nbsp;</label><input type="date"/>
-                    <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input type="date"/>&nbsp;&nbsp;
-                    <button type="button" id='source-list-get-data' class="btn btn-outline-primary" data-toggle="collapse" data-target="#source-list-div">Get Data</button>
+                    <input type="text" style="display: none;" id='source_list_text' value=""/>
+                    <label style="font-size: 20px;">From: &nbsp;</label><input id='drop_from_date' type="date"/>
+                    <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input id='drop_to_date' type="date"/>&nbsp;&nbsp;
+                    <button type="button" id='source-list-get-data' class="btn btn-outline-danger" data-toggle="collapse" data-target="#source-list-div">Get Data</button>
                   </div>
             </div>
         </div>
-    
-    <div class="table-responsive-sm" style="overflow: auto; white-space: nowrap; height: 500px;">
-        <table id='main-source-tbl' class="table table-hover" style="text-align: left; margin-top: 25px; ">
-            <tbody>
-                <tr style="background: #00e7ff;">
-                    <th>Source Name</th>
-                    <th>Count</th>
-                </tr>
-            </tbody>
-          </table>
+    <div id='loader_div' style="display: none;">
+        <div class="d-flex justify-content-center source-list" style="margin-top: 61px; text-align: center;">
+            <lable style="font-size: 34px;"> <span class="grow text-primary">Please</span> <span class="text-success">Wait</span> <span class="text-danger">Until</span> <span class="text-warning">Data</span> <span class="text-info">Load</span> 
+                <div class="spinner-grow text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-success" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-danger" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-warning" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-info" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </lable>
+        </div>
+    </div>
+    <div id='table_detail' class="table-responsive-lg" style="overflow: auto; white-space: nowrap; height: 500px;">
+        
     </div>
 </div>
 
@@ -381,6 +394,8 @@
 <script>
     $(document).ready(function(){
         $("#source-list-get-data").click(function(){
+            $('#loader_div').css({'display':'block'});
+            $('#table_detail').css({'display':'none'});
             function clear_modal_elements(id_name) {
                 jQuery("#"+id_name).find(':input').each(function() {
                     switch(this.type) {
@@ -408,26 +423,57 @@
             $.each($("input[name='source-name']:checked"), function(){            
                 source_list.push($(this).val());
             });
-            clear_modal_elements("source-list-div");
-            $("#source-list-text").val(source_list);
-            // alert("My source list are: " + source_list.join(", "));
-            $.ajax({
-            type:"POST",
-            url:"source-details",
-            data:{
-                source_list_text:$.trim($('#source-list-text').val()),
-                csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
-            },
-            success:function(return_data){
-
-                return_data.forEach(myFunction);
-
-                function myFunction(item) {
-                var addtr = "<tr><td>" + item[0] + "</td><td>" + item[1] + "</td></tr>";
-                $("#main-source-tbl > tbody").append(addtr);
-                }
+            
+            $("#source_list_text").val(source_list);
+            if ($(source_list).length == 0){
+                alert("Please Select Source For Get result");
             }
-            });
+            else
+            {
+                $.ajax({
+                    type:"POST",
+                    url:"source-details",
+                    data:{
+                        drop_from_date:$('#drop_from_date').val(),
+                        drop_to_date:$('#drop_to_date').val(),
+                        source_list_text:$('#source_list_text').val(),
+                        
+                        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                    },
+                    success:function(return_data){
+                        clear_modal_elements("source-list-div");
+                        $('#loader_div').css({'display':'none'});
+                        $('#table_detail').css({'display':'block'});
+                        $('#table_detail').html(return_data);
+                    }
+                });
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function(){
+        $("#source-list-btn").click(function(){
+
+            $('#loader_div').css({'display':'block'});
+            $('#table_detail').css({'display':'none'});
+            
+            $.ajax({
+                    type:"POST",
+                    url:"All-source-details",
+                    data:{
+                        
+                        from_date:$('#from_date').val(),
+                        to_date:$('#to_date').val(),
+                        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                    },
+                    success:function(return_data){
+                        $('#loader_div').css({'display':'none'});
+                        $('#table_detail').css({'display':'block'});
+                        $('#table_detail').html(return_data);
+                        
+                    }
+                });
         });
     });
 </script>
