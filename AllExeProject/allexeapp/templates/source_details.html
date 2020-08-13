@@ -427,6 +427,9 @@
             $("#source_list_text").val(source_list);
             if ($(source_list).length == 0){
                 alert("Please Select Source For Get result");
+                clear_modal_elements("source-list-div");
+                $('#loader_div').css({'display':'none'});
+                $('#table_detail').css({'display':'block'});
             }
             else
             {
@@ -437,7 +440,6 @@
                         drop_from_date:$('#drop_from_date').val(),
                         drop_to_date:$('#drop_to_date').val(),
                         source_list_text:$('#source_list_text').val(),
-                        
                         csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
                     },
                     success:function(return_data){

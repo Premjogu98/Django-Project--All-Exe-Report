@@ -203,22 +203,25 @@ def source_details(request):
             table_html = ''
             table_th = ""
             source_name_with_count = ''
+            main_total_count_list = []
+            all_total_tr = ''
+            all_total_count = 0
             from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
             to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
             diff_date = to_date_datetime_obj - from_date_obj
             diff_date = diff_date.days
-            
+
             for date in range(int(diff_date)+1):
                 date_month = from_date_obj.strftime("%d-%b")
                 table_th += f"<th>{str(date_month)}</th>"
                 from_date_obj = from_date_obj + timedelta(days=1)
-
+            
             for source_name in selected_source_list:
                 m_count_td  = ''
                 m_source_name_count = f'<tr><td>{str(source_name)}</td>'
                 m_source_count = 0
                 from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
-                # main_date = from_date_obj.strftime("%Y-%m-%d")
+                total_count_list = []
                 for date in range(int(diff_date)+1):
                     main_date = from_date_obj.strftime("%Y-%m-%d")
                     a = 0 
@@ -228,6 +231,7 @@ def source_details(request):
                             exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name).strip()}' AND DATE(added_on) = '{str(main_date).strip()}'")
                             data = exe_DB_cursor.fetchone()
                             data_list = list(data)
+                            total_count_list.append(f'{data_list[0]}')
                             m_count_td += f'<td>{data_list[0]}</td>'
                             m_source_count += int(data_list[0])
                             a = 1
@@ -238,8 +242,18 @@ def source_details(request):
                             a = 0 
                     print(f'Done: {source_name}')
                     from_date_obj = from_date_obj + timedelta(days=1)
+                main_total_count_list.append(total_count_list)
+                all_total_count += m_source_count
                 source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
                     
+            # print(main_total_count_list)
+            index_no = 0
+            for date in range(int(diff_date)+1):
+                total_count = 0
+                for count_list in main_total_count_list:
+                    total_count += int(count_list[index_no])
+                all_total_tr += f'<td>{str(total_count)}</td>'
+                index_no +=1
 
             table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
@@ -251,12 +265,15 @@ def source_details(request):
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
+                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
                         </tbody>
                     </table>"""
             return JsonResponse(str(table_html), safe=False)
         
         else :
             source_name_with_count = ""
+            main_source_total = 0
+            main_total = 0
             now = datetime_obj.now()
             main_date = now.strftime("%d-%B-%Y")
             for source_name in selected_source_list:
@@ -272,6 +289,8 @@ def source_details(request):
                         data_list = list(data)
                         m_count_td += f'<td>{data_list[0]}</td>'
                         m_source_count += int(data_list[0])
+                        main_source_total += m_source_count
+                        main_total += m_source_count
                         a = 1
                     except Exception as e:
                         print(e)
@@ -279,11 +298,11 @@ def source_details(request):
                         time.sleep(2)
                         a = 0 
                 print(f'Done: {source_name}')
-                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
                     
             table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;">
                         <thead>
-                            <tr style="background: #00e7ff;">
+                            <tr>
                                 <th>Source Name</th>
                                 <th>{str(main_date)}</th> 
                                 <th>Total</th>
@@ -291,6 +310,7 @@ def source_details(request):
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
+                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
                         </tbody>
                     </table>"""
             
@@ -312,22 +332,26 @@ def All_source_details(request):
             table_html = ''
             table_th = ""
             source_name_with_count = ''
+            main_total_count_list = []
+            all_total_tr = ''
+            all_total_count = 0
             from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
             to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
             diff_date = to_date_datetime_obj - from_date_obj
             diff_date = diff_date.days
-            
+
             for date in range(int(diff_date)+1):
                 date_month = from_date_obj.strftime("%d-%b")
                 table_th += f"<th>{str(date_month)}</th>"
                 from_date_obj = from_date_obj + timedelta(days=1)
-
+            
             for source_name in source_list[0:10]:
                 m_count_td  = ''
                 m_source_name_count = f'<tr><td>{str(source_name[0])}</td>'
                 m_source_count = 0
                 from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
                 # main_date = from_date_obj.strftime("%Y-%m-%d")
+                total_count_list = []
                 for date in range(int(diff_date)+1):
                     main_date = from_date_obj.strftime("%Y-%m-%d")
                     a = 0 
@@ -337,6 +361,7 @@ def All_source_details(request):
                             exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND DATE(added_on) = '{str(main_date).strip()}'")
                             data = exe_DB_cursor.fetchone()
                             data_list = list(data)
+                            total_count_list.append(f'{data_list[0]}')
                             m_count_td += f'<td>{data_list[0]}</td>'
                             m_source_count += int(data_list[0])
                             a = 1
@@ -347,11 +372,21 @@ def All_source_details(request):
                             a = 0 
                     print(f'Done: {source_name[0]}')
                     from_date_obj = from_date_obj + timedelta(days=1)
+                main_total_count_list.append(total_count_list)
+                all_total_count += m_source_count
                 source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
                     
+            # print(main_total_count_list)
+            index_no = 0
+            for date in range(int(diff_date)+1):
+                total_count = 0
+                for count_list in main_total_count_list:
+                    total_count += int(count_list[index_no])
+                all_total_tr += f'<td>{str(total_count)}</td>'
+                index_no +=1
 
-            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;>
-                        <thead >
+            table_html =  f"""<table class="table table-hover" style="text-align: center; margin-top: 25px;>
+                        <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
                                 {str(table_th)}
@@ -360,12 +395,15 @@ def All_source_details(request):
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
+                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
                         </tbody>
                     </table>"""
             return JsonResponse(str(table_html), safe=False)
         
         else :
             source_name_with_count = ""
+            main_source_total = 0
+            main_total = 0
             now = datetime_obj.now()
             main_date = now.strftime("%d-%B-%Y")
             for source_name in source_list[0:10]:
@@ -381,6 +419,8 @@ def All_source_details(request):
                         data_list = list(data)
                         m_count_td += f'<td>{data_list[0]}</td>'
                         m_source_count += int(data_list[0])
+                        main_source_total += m_source_count
+                        main_total += m_source_count
                         a = 1
                     except Exception as e:
                         print(e)
@@ -388,7 +428,7 @@ def All_source_details(request):
                         time.sleep(2)
                         a = 0 
                 print(f'Done: {source_name[0]}')
-                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
                     
             table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;">
                         <thead>
@@ -400,6 +440,7 @@ def All_source_details(request):
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
+                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
                         </tbody>
                     </table>"""
             
