@@ -12,7 +12,7 @@
 {% endblock %}
 {% block body %}
 {% csrf_token %}
-<div class="container-fluid">
+<div class="container-fluid" id="main-div">
     <div class="d-flex justify-content-center source-list">
         <h2 class="source-list-h">Source list</h2>
     </div>
@@ -456,7 +456,29 @@
 <script>
     $(document).ready(function(){
         $("#source-list-btn").click(function(){
-
+            function clear_modal_elements(id_name) {
+                jQuery("#"+id_name).find(':input').each(function() {
+                    switch(this.type) {
+                        case 'password':
+                        case 'text':
+                        case 'textarea':
+                        case 'file':
+                        case 'select-one':
+                        case 'select-multiple':
+                        case 'date':
+                        case 'number':
+                        case 'tel':
+                        case 'email':
+                        case 'hidden':
+                            jQuery(this).val('');
+                            break;
+                        case 'checkbox':
+                        case 'radio':
+                            this.checked = false;
+                            break;
+                    }
+                });
+            }
             $('#loader_div').css({'display':'block'});
             $('#table_detail').css({'display':'none'});
             
@@ -473,6 +495,8 @@
                         $('#loader_div').css({'display':'none'});
                         $('#table_detail').css({'display':'block'});
                         $('#table_detail').html(return_data);
+                        clear_modal_elements('main-div')
+
                         
                     }
                 });

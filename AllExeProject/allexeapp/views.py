@@ -385,7 +385,7 @@ def All_source_details(request):
                 all_total_tr += f'<td>{str(total_count)}</td>'
                 index_no +=1
 
-            table_html =  f"""<table class="table table-hover" style="text-align: center; margin-top: 25px;>
+            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
