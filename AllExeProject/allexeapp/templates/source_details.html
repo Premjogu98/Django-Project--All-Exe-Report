@@ -20,6 +20,7 @@
         <div class="col-lg-7" style="margin-bottom: 7px;">
             <label>Source Count: <label id="source_count" style="color: red;">{{source_list|length}}</label></label>&nbsp;&nbsp;
             <button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target="#source-list-div">Show Source List</button>
+            
         </div>
         
         <div class="col-lg-5" style="text-align: right; margin-bottom: 7px;">  
@@ -380,12 +381,22 @@
                 <div class="spinner-grow text-info" role="status">
                     <span class="sr-only">Loading...</span>
                 </div>
+                <br><label style="font-size: 27px; color: lightseagreen;">Data Visible Time will Be Depending On Your Selected Date Like <b class="text-danger">From </b> <B style="color: lightseagreen;">&</B> <B class="text-danger"> To Date</b></label>
             </lable>
+            
         </div>
     </div>
-    <div id='table_detail' class="table-responsive-lg" style="overflow: auto; white-space: nowrap; height: 500px;">
+    <form action="export-to-csv" method="POST">
+        {% csrf_token %}
+        <div class="export-div" style="display: none;">
+            <button type="submit" class="btn btn-outline-primary" >Export Data To CSV</button>
+        </div>
+        <input type="text" id='html_table_input' name="html_table_input" class="html_table_input" style="display: none;" value="" />
+    </form>
         
+    <div id='table_detail' name="table_detail" class="table-responsive-lg" style="overflow: auto; white-space: nowrap; display: none; height: 500px;">
     </div>
+
 </div>
 
 
@@ -426,7 +437,7 @@
             
             $("#source_list_text").val(source_list);
             if ($(source_list).length == 0){
-                alert("Please Select Source For Get result");
+                alert("Please Select Source For Get Result");
                 clear_modal_elements("source-list-div");
                 $('#loader_div').css({'display':'none'});
                 $('#table_detail').css({'display':'block'});
@@ -446,6 +457,7 @@
                         clear_modal_elements("source-list-div");
                         $('#loader_div').css({'display':'none'});
                         $('#table_detail').css({'display':'block'});
+                        $('.export-div').css({'display':'block'});
                         $('#table_detail').html(return_data);
                     }
                 });
@@ -494,14 +506,12 @@
                     success:function(return_data){
                         $('#loader_div').css({'display':'none'});
                         $('#table_detail').css({'display':'block'});
+                        $('.export-div').css({'display':'block'});
                         $('#table_detail').html(return_data);
-                        clear_modal_elements('main-div')
-
-                        
+                        $("#html_table_input").val(return_data);
                     }
                 });
         });
     });
 </script>
-
 {% endblock %}

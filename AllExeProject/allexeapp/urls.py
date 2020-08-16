@@ -9,5 +9,7 @@ urlpatterns = [
     path('update-model-data',views.update_model , name='update-model-data'),
     path('source-details',views.source_details , name='source-details'),
     path('All-source-details',views.All_source_details , name='All-source-details'),
+    path('export-to-csv',views.Export_csv , name='export-to-csv'),
+
 
 ]

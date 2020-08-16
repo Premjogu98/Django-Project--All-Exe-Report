@@ -11,6 +11,8 @@ import datetime
 from datetime import timedelta 
 import time
 from datetime import datetime as datetime_obj
+import re
+import csv
 def country_db_connection():
     a = 0
     while a == 0:
@@ -255,7 +257,9 @@ def source_details(request):
                 all_total_tr += f'<td>{str(total_count)}</td>'
                 index_no +=1
 
-            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;>
+            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
+            
+            table_html =  f"""<table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
@@ -265,7 +269,7 @@ def source_details(request):
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
-                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
+                            <tr class="Total"><td>Total</td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
                         </tbody>
                     </table>"""
             return JsonResponse(str(table_html), safe=False)
@@ -299,8 +303,10 @@ def source_details(request):
                         a = 0 
                 print(f'Done: {source_name}')
                 source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
-                    
-            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;">
+            
+            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
+
+            table_html =  f"""<table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
                         <thead>
                             <tr>
                                 <th>Source Name</th>
@@ -310,7 +316,7 @@ def source_details(request):
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
-                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
+                            <tr class="Total"><td>Total</td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
                         </tbody>
                     </table>"""
             
@@ -321,10 +327,19 @@ def source_details(request):
 
 
 def All_source_details(request):
+    
+    # exe_DB_cursor = connection.cursor()
+    # exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
+    # data = exe_DB_cursor.fetchall()
+    # source_list = [list(tup) for tup in data]
+    
     exe_DB_cursor = connection.cursor()
-    exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
-    data = exe_DB_cursor.fetchall()
-    source_list = [list(tup) for tup in data]
+    exe_DB_cursor.execute("""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id order by sm.id ASC""")
+    source_data_list = exe_DB_cursor.fetchall()
+    source_data_list = list(source_data_list)
+    source_data_list = [list(tup) for tup in source_data_list]
     if request.method == 'POST':
         from_date = request.POST['from_date']
         to_date = request.POST['to_date']
@@ -335,25 +350,26 @@ def All_source_details(request):
             main_total_count_list = []
             all_total_tr = ''
             all_total_count = 0
-            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
-            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
-            diff_date = to_date_datetime_obj - from_date_obj
-            diff_date = diff_date.days
 
-            for date in range(int(diff_date)+1):
-                date_month = from_date_obj.strftime("%d-%b")
-                table_th += f"<th>{str(date_month)}</th>"
-                from_date_obj = from_date_obj + timedelta(days=1)
+            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') # get date from datepicker like this 2020-08-14 and convert into datetime object
+            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d') # # get date from datepicker like this 2020-08-16 and convert into datetime object
+            diff_date = to_date_datetime_obj - from_date_obj # To date minus from from date
+            diff_date = diff_date.days # Then get diff between two dates like 2020-08-16 - 2020-08-14 = 3
+
+            for date in range(int(diff_date)+1):  # add diff date on loop to run 
+                date_month = from_date_obj.strftime("%d-%b") # From date convert into string with some date formate like this 14-Aug
+                table_th += f"<th>{str(date_month)}</th>" # add th tag on top off tbody like this <th>14-Aug</th> 
+                from_date_obj = from_date_obj + timedelta(days=1) # add one date on from date like 2020-08-14 + 1day = 2020-08-15 
             
-            for source_name in source_list[0:10]:
+            for source_name in source_data_list[0:10]:  # total source list with detail
                 m_count_td  = ''
-                m_source_name_count = f'<tr><td>{str(source_name[0])}</td>'
+                m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
-                # main_date = from_date_obj.strftime("%Y-%m-%d")
+
                 total_count_list = []
                 for date in range(int(diff_date)+1):
-                    main_date = from_date_obj.strftime("%Y-%m-%d")
+                    main_date = from_date_obj.strftime("%Y-%m-%d")  # change the formate of from date
                     a = 0 
                     while a == 0 :
                         try:
@@ -385,17 +401,21 @@ def All_source_details(request):
                 all_total_tr += f'<td>{str(total_count)}</td>'
                 index_no +=1
 
-            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;>
+            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
+
+            table_html =  f"""<table id="main_table" name="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
+                                <th>EXE Run By</th>
+                                <th>EXE Developer</th>
                                 {str(table_th)}
                                 <th>Total</th> 
                             </tr>
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
-                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
+                            <tr class="Total"><td>Total</td><td></td><td></td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
                         </tbody>
                     </table>"""
             return JsonResponse(str(table_html), safe=False)
@@ -406,9 +426,9 @@ def All_source_details(request):
             main_total = 0
             now = datetime_obj.now()
             main_date = now.strftime("%d-%B-%Y")
-            for source_name in source_list[0:10]:
+            for source_name in source_data_list[0:10]:
                 m_count_td  = ''
-                m_source_name_count = f'<tr><td>{str(source_name[0])}</td>'
+                m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 a = 0 
                 while a == 0 :
@@ -429,19 +449,61 @@ def All_source_details(request):
                         a = 0 
                 print(f'Done: {source_name[0]}')
                 source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
-                    
-            table_html =  f"""<table class="table table-hover" style="text-align: left; margin-top: 25px;">
+
+            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
+
+            table_html =  f"""<table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
                         <thead>
                             <tr>
                                 <th>Source Name</th>
+                                <th>EXE Run By</th>
+                                <th>EXE Developer</th>
                                 <th>{str(main_date)}</th> 
                                 <th>Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
-                            <tr style="color: black;font-size: 15px; font-weight: bold;"><td>Total</td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
+                            <tr class="Total"><td>Total</td><td></td><td></td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
                         </tbody>
                     </table>"""
             
             return JsonResponse(str(table_html), safe=False)
+
+
+def Export_csv(request):
+    if request.method == 'POST':
+        now = datetime_obj.now()
+        main_date = now.strftime("%d%m%Y%H%M")
+        response = HttpResponse(content_type='text/csv')
+        
+        main_table = request.POST['html_table_input']
+        # print(main_table)
+        main_table = main_table.replace('\n',' ')
+        main_table = re.sub("\s+" , " ", main_table)
+
+        Th_list = re.findall(r"(?<=<th>).*?(?=</th>)", main_table)
+        tbody_text = main_table.partition("<tbody>")[2].partition('<tr class="Total">')[0]
+        total_text = main_table.partition('<tr class="Total">')[2].partition('</tr>')[0].strip()
+        # print(total_text)
+        tbody_text = tbody_text.replace('<td></td>','')
+        print(tbody_text)
+        
+        td_list = tbody_text.split('<tr>')
+        print(td_list)
+        # print(Th_list)
+        writer = csv.writer(response)
+        writer.writerow(Th_list)
+        for td in td_list:
+            td = td.replace('<td>','')
+            td = td.split('</td>')
+            del td[-1]
+            print(td)
+            writer.writerow(td)
+        total_text =  total_text.replace('<td>','')
+        total_list = total_text.split('</td>')
+        del total_list[-1]
+        print(total_list)
+        writer.writerow(total_list)
+        response['Content-Disposition'] = f'attachment; filename="sourceDetails{main_date}.csv"'
+        return response
