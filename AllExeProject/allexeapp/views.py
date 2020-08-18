@@ -200,7 +200,16 @@ def source_details(request):
         print(source_list_text)
         source_list_text = source_list_text.replace(',',',,')
         selected_source_list = source_list_text.split(',,')
-        # print(selected_source_list)
+        source_list = str(selected_source_list).replace('[','').replace(']','')
+        exe_DB_cursor.execute(f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
+                                WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC""")
+        data = exe_DB_cursor.fetchall()
+        source_data_list = list(data)
+        source_data_list = [list(tup) for tup in source_data_list]
+        print(source_data_list)
+
         if from_date != "" and to_date != "":
             table_html = ''
             table_th = ""
@@ -218,9 +227,10 @@ def source_details(request):
                 table_th += f"<th>{str(date_month)}</th>"
                 from_date_obj = from_date_obj + timedelta(days=1)
             
-            for source_name in selected_source_list:
+            for source_name in source_data_list:
+                print(source_name)
                 m_count_td  = ''
-                m_source_name_count = f'<tr><td>{str(source_name)}</td>'
+                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
                 total_count_list = []
@@ -230,7 +240,7 @@ def source_details(request):
                     while a == 0 :
                         try:
                             exe_DB_cursor = connection.cursor()
-                            exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name).strip()}' AND DATE(added_on) = '{str(main_date).strip()}'")
+                            exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND DATE(added_on) = '{str(main_date).strip()}'")
                             data = exe_DB_cursor.fetchone()
                             data_list = list(data)
                             total_count_list.append(f'{data_list[0]}')
@@ -246,7 +256,11 @@ def source_details(request):
                     from_date_obj = from_date_obj + timedelta(days=1)
                 main_total_count_list.append(total_count_list)
                 all_total_count += m_source_count
-                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                if m_source_count != 0:
+                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                else:
+                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                # source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
                     
             # print(main_total_count_list)
             index_no = 0
@@ -259,17 +273,19 @@ def source_details(request):
 
             # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
             
-            table_html =  f"""<table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Selected Source Details From: {from_date} To: {to_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
+                                <th>EXE Run By</th>
+                                <th>EXE Developer</th>
                                 {str(table_th)}
                                 <th>Total</th> 
                             </tr>
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
-                            <tr class="Total"><td>Total</td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
+                            <tr class="Total"><td>Total</td><td></td><td></td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
                         </tbody>
                     </table>"""
             return JsonResponse(str(table_html), safe=False)
@@ -280,15 +296,16 @@ def source_details(request):
             main_total = 0
             now = datetime_obj.now()
             main_date = now.strftime("%d-%B-%Y")
-            for source_name in selected_source_list:
+            for source_name in source_data_list:
+                print(source_name)
                 m_count_td  = ''
-                m_source_name_count = f'<tr><td>{str(source_name)}</td>'
+                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 a = 0 
                 while a == 0 :
                     try:
                         exe_DB_cursor = connection.cursor()
-                        exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name).strip()}' AND DATE(added_on) = CURDATE()")
+                        exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND DATE(added_on) = CURDATE()")
                         data = exe_DB_cursor.fetchone()
                         data_list = list(data)
                         m_count_td += f'<td>{data_list[0]}</td>'
@@ -302,21 +319,27 @@ def source_details(request):
                         time.sleep(2)
                         a = 0 
                 print(f'Done: {source_name}')
-                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
+                if m_source_count != 0:
+                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                else:
+                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                # source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
             
             # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
 
-            table_html =  f"""<table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Selected Source Details Of Current Date: {main_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
                         <thead>
                             <tr>
                                 <th>Source Name</th>
+                                <th>EXE Run By</th>
+                                <th>EXE Developer</th>
                                 <th>{str(main_date)}</th> 
                                 <th>Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             {str(source_name_with_count)}
-                            <tr class="Total"><td>Total</td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
+                            <tr class="Total"><td>Total</td><td></td><td></td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
                         </tbody>
                     </table>"""
             
@@ -340,6 +363,7 @@ def All_source_details(request):
     source_data_list = exe_DB_cursor.fetchall()
     source_data_list = list(source_data_list)
     source_data_list = [list(tup) for tup in source_data_list]
+    # print(source_data_list)
     if request.method == 'POST':
         from_date = request.POST['from_date']
         to_date = request.POST['to_date']
@@ -363,7 +387,7 @@ def All_source_details(request):
             
             for source_name in source_data_list[0:10]:  # total source list with detail
                 m_count_td  = ''
-                m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
+                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
 
@@ -390,8 +414,11 @@ def All_source_details(request):
                     from_date_obj = from_date_obj + timedelta(days=1)
                 main_total_count_list.append(total_count_list)
                 all_total_count += m_source_count
-                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
-                    
+                if m_source_count != 0:
+                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                else:
+                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+ 
             # print(main_total_count_list)
             index_no = 0
             for date in range(int(diff_date)+1):
@@ -403,7 +430,7 @@ def All_source_details(request):
 
             # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
 
-            table_html =  f"""<table id="main_table" name="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Source Details of From: {from_date} To: {to_date}</h4></div><table id="main_table" name="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
@@ -428,7 +455,7 @@ def All_source_details(request):
             main_date = now.strftime("%d-%B-%Y")
             for source_name in source_data_list[0:10]:
                 m_count_td  = ''
-                m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
+                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 a = 0 
                 while a == 0 :
@@ -448,11 +475,14 @@ def All_source_details(request):
                         time.sleep(2)
                         a = 0 
                 print(f'Done: {source_name[0]}')
-                source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
+                if m_source_count != 0:
+                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                else:
+                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
 
             # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
 
-            table_html =  f"""<table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Source Details Of Current Date: {main_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
                         <thead>
                             <tr>
                                 <th>Source Name</th>
@@ -487,15 +517,15 @@ def Export_csv(request):
         total_text = main_table.partition('<tr class="Total">')[2].partition('</tr>')[0].strip()
         # print(total_text)
         tbody_text = tbody_text.replace('<td></td>','')
-        print(tbody_text)
+        # print(tbody_text)
         
         td_list = tbody_text.split('<tr>')
-        print(td_list)
+        # print(td_list)
         # print(Th_list)
         writer = csv.writer(response)
         writer.writerow(Th_list)
         for td in td_list:
-            td = td.replace('<td>','')
+            td = td.replace('<td>','').replace("<a href='","").replace("' target='_blank'>Click Here</a>",'')
             td = td.split('</td>')
             del td[-1]
             print(td)
@@ -507,3 +537,109 @@ def Export_csv(request):
         writer.writerow(total_list)
         response['Content-Disposition'] = f'attachment; filename="sourceDetails{main_date}.csv"'
         return response
+
+
+def zero_count(request):
+
+    if request.method == 'POST':
+        Category = request.POST['Category']
+        from_date = request.POST['from_date']
+        to_date = request.POST['to_date']
+        exe_DB_cursor = connection.cursor()
+        exe_DB_cursor.execute("""SELECT sm.source_name,sm.country_iso,sm.avg_tender,sm.status,sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id ORDER BY avg_tender ASC""")
+        data = exe_DB_cursor.fetchall()
+        source_list = [list(tup) for tup in data]
+        print(f'Category : {Category}')
+        print(f'from_date : {from_date}')
+        print(f'from_date : {to_date}')
+        source_detail_tr = ""
+        for source in source_list[0:100]:
+
+            if Category == "all" and from_date != "" and to_date != "":
+                exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND (DATE(added_on) BETWEEN '{str(from_date)}' AND '{str(to_date)}')")
+                data = exe_DB_cursor.fetchone()
+                data_list = list(data)
+                if data_list[0] == 0:
+                    source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+            elif Category == "all" and from_date != "" and to_date == "":
+                exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) >= '{str(from_date)}'")
+                data = exe_DB_cursor.fetchone()
+                data_list = list(data)
+                if data_list[0] == 0:
+                    source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+            elif Category == "all" and from_date == "" and to_date == "":
+                exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) = CURDATE()")
+                data = exe_DB_cursor.fetchone()
+                data_list = list(data)
+                if data_list[0] == 0:
+                    source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+            #=============================================================================================================================
+            
+            elif Category == "none-in" and from_date != "" and to_date != "":
+                if str(source[1]) != 'IN':
+                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND (DATE(added_on) BETWEEN '{str(from_date)}' AND '{str(to_date)}')")
+                    data = exe_DB_cursor.fetchone()
+                    data_list = list(data)
+                    if data_list[0] == 0:
+                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+            elif Category == "none-in" and from_date != "" and to_date == "":
+                if str(source[1]) != 'IN':
+                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) >= '{str(from_date)}'")
+                    data = exe_DB_cursor.fetchone()
+                    data_list = list(data)
+                    if data_list[0] == 0:
+                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+            elif Category == "none-in" and from_date == "" and to_date == "":
+                if str(source[1]) != 'IN':
+                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) = CURDATE()")
+                    data = exe_DB_cursor.fetchone()
+                    data_list = list(data)
+                    if data_list[0] == 0:
+                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+
+            #=============================================================================================================================
+
+            elif Category == "in" and from_date != "" and to_date != "":
+                if str(source[1]) == 'IN':
+                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND (DATE(added_on) BETWEEN '{str(from_date)}' AND '{str(to_date)}')")
+                    data = exe_DB_cursor.fetchone()
+                    data_list = list(data)
+                    if data_list[0] == 0:
+                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+
+            elif Category == "in" and from_date != "" and to_date == "":
+                if str(source[1]) == 'IN':
+                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) >= '{str(from_date)}'")
+                    data = exe_DB_cursor.fetchone()
+                    data_list = list(data)
+                    if data_list[0] == 0:
+                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+
+            elif Category == "in" and from_date == "" and to_date == "":
+                if str(source[1]) == 'IN':
+                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) = CURDATE()")
+                    data = exe_DB_cursor.fetchone()
+                    data_list = list(data)
+                    if data_list[0] == 0:
+                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+            print(f'Done: {source[0]}')
+        table_html =  f""" <table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
+                            <thead>
+                                <tr>
+                                    <th>Source Name</th>
+                                    <th>EXE Run By</th>
+                                    <th>EXE Developer</th>
+                                    <th>Tender AVG</th>
+                                    <th>Status</th>
+                                    <th>Tender Link</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {str(source_detail_tr)}
+                            </tbody>
+                        </table>"""
+        return JsonResponse(str(table_html), safe=False)
+
+    return render(request, 'Zero_count_page.html')

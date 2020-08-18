@@ -1,0 +1,114 @@
+{% extends 're_use_html_ele.html' %}
+{% load static %}
+{% block title %}Zero Count Page{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block body %}
+{% csrf_token %}
+<div class="container-fluid" id="main-div">
+    <div class="d-flex justify-content-center source-list">
+        <h2 class="source-list-h">Zero Count Source list</h2>
+    </div>
+
+    <div class="row" style="border-bottom: 1px solid black;">
+        <div class="col-lg-7" style="margin-bottom: 7px;">
+            <label for="Category">Select Source Category</label>&nbsp;
+            <select name="Category" class="drop" id="Category" style="width: 25%;">
+                <option selected="selected" disabled> Select </option>
+                <option value='all'>All</option>
+                <option value='none-in'>Non-India</option>
+                <option value='in'>India</option>
+            </select>
+        </div>
+        <div class="col-lg-5" style="text-align: right; margin-bottom: 7px;">  
+                <label style="font-size: 20px;">From: &nbsp;</label><input id='from_date' type="date"/>
+                <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input id='to_date' type="date"/>&nbsp;&nbsp;
+                <button type="button" id='search-source-btn' class="btn btn-outline-primary" style="width: 100px;">Search</button>
+        </div>
+
+    </div>
+
+    <div id="alert" class="alert-Error" style="display: none;">
+    </div>
+
+    <div id='loader_div' style="display: none;">
+        <div class="d-flex justify-content-center source-list" style="margin-top: 61px; text-align: center;">
+            <lable style="font-size: 34px;"> <span class="grow text-primary">Please</span> <span class="text-success">Wait</span> <span class="text-danger">Until</span> <span class="text-warning">Data</span> <span class="text-info">Load</span> 
+                <div class="spinner-grow text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-success" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-danger" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-warning" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="spinner-grow text-info" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <br><label style="font-size: 27px; color: lightseagreen;">Data Visible Time will Be Depending On Your Selected Date Like <b class="text-danger">From </b> <B style="color: lightseagreen;">&</B> <B class="text-danger"> To Date</b></label>
+            </lable>
+            
+        </div>
+    </div>
+    <form action="export-to-csv" method="POST">
+        {% csrf_token %}
+        <div class="row 0-export-div" style="display: none;">
+            <div class="col-lg-10">
+                <p><b>Tips: </b> <b>1. Status Field: </b> 1=Working<b> | </b>2=GTS_Maintenance<b> | </b>3=Website_Issue<b> | </b>4=GTS_Stopped<br></p>
+            </div>
+            <div class="col-lg-2">
+            <button type="submit" class="btn btn-outline-primary" >Export Data To CSV</button></div>
+        </div>
+        <input type="text" id='html_table_input' name="html_table_input" class="html_table_input" style="display: none;" value="" />
+    </form>
+    <div id='table_detail' name="table_detail" class="table-responsive-lg" style="overflow: auto; white-space: nowrap; display: none; height: 500px;">
+    </div>
+    
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function(){
+        $("#search-source-btn").click(function(){
+            $('#loader_div').css({'display':'block'});
+            $('#table_detail').css({'display':'none'});
+            $('.0-export-div').css({'display':'none'});
+            var category = $('#Category').val();
+            var from_date = $('#from_date').val();
+            
+            if ((category == "") || (category == null)){
+                $('#alert').html('<div class="alert alert-danger alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button>&#128545<strong>Error!</strong> Please Select Category</div>');
+                $('#alert').css({'display':'block','margin-bottom': '3px'});
+            }
+            else 
+            {
+                $.ajax({
+                    type:"POST",
+                    url:"Zero-count-page",
+                    data:{
+                        
+                        Category:$('#Category').val(),
+                        from_date:$('#from_date').val(),
+                        to_date:$('#to_date').val(),
+                        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                    },
+                    success:function(return_data){
+                        $('#loader_div').css({'display':'none'});
+                        $('#table_detail').css({'display':'block'});
+                        $('.0-export-div').css({'display':'block'});
+                        $('#table_detail').html(return_data);
+                        $("#html_table_input").val(return_data);
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
