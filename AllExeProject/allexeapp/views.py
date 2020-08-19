@@ -13,6 +13,15 @@ import time
 from datetime import datetime as datetime_obj
 import re
 import csv
+from django.core.mail import send_mail
+from django.conf import settings
+
+# send email with html tags using this import
+
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
 def country_db_connection():
     a = 0
     while a == 0:
@@ -643,3 +652,23 @@ def zero_count(request):
         return JsonResponse(str(table_html), safe=False)
 
     return render(request, 'Zero_count_page.html')
+
+
+def Send_email(request):
+    #  send_mail('Hello This is Subject',
+    #  'This is Message Body',
+    #  'premjogu98@gmail.com',
+    #  ['premtani007@gmail.com'],
+    #  fail_silently=False)
+    html_content = render_to_string('email_template.html',{'title':'Test Email','content':'this html content'})
+    text_content = strip_tags(html_content)
+    email = EmailMultiAlternatives(
+        'test email this is subject',
+        text_content,
+        settings.EMAIL_HOST_USER,
+        ['premtani007@gmail.com']
+    )
+    email.attach_alternative(html_content,'text/html')
+    email.send()
+    return HttpResponse('Email Send Done')
+     

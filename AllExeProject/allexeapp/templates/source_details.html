@@ -20,11 +20,11 @@
     <div class="row" style="border-bottom: 1px solid black;">
         <div class="col-lg-7" style="margin-bottom: 7px;">
             <label>Source Count: <label id="source_count" style="color: red;">{{source_list|length}}</label></label>&nbsp;&nbsp;
-            <button type="button" class="btn btn-outline-primary" data-toggle="collapse" data-target="#source-list-div">Show Source List</button>
+            <button type="button"  id = "show-source" class="btn btn-outline-primary" data-toggle="collapse" data-target="#source-list-div">Show Source List</button>
             
         </div>
         
-        <div class="col-lg-5" style="text-align: right; margin-bottom: 7px;">  
+        <div class="col-lg-5" id="from-to-search" style="text-align: right; margin-bottom: 7px;">  
                 <label style="font-size: 20px;">From: &nbsp;</label><input id='from_date' type="date"/>
                 <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input id='to_date' type="date"/>&nbsp;&nbsp;
                 <button type="button" id='source-list-btn' class="btn btn-outline-primary" style="width: 100px;">Search</button>
@@ -408,7 +408,15 @@
 {% block script %}
 <script>
     $(document).ready(function(){
+        $("#show-source").click(function(){
+            $("#from-to-search").toggle();
+        });
+    });
+</script>
+<script>
+    $(document).ready(function(){
         $("#source-list-get-data").click(function(){
+            $('.export-div').css({'display':'none'});
             $('#loader_div').css({'display':'block'});
             $('#table_detail').css({'display':'none'});
             function clear_modal_elements(id_name) {
