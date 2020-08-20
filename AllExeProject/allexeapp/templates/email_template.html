@@ -4,8 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
+    <style>
+        table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+        th, td {
+          padding: 5px;
+          text-align: left;    
+        }
+        </style>
 </head>
 <body>
-    <h2 style="background-color: red;">{{ content }}</h2>
+    
+    <table style="width:100%">
+      <thead>
+        <tr>
+            <th>Source Name</th>
+            <th>EXE Run By</th>
+            <th>EXE Developer</th>
+            <th>Tender AVG</th>
+            <th>Status</th>
+            <th>Tender Link</th>
+        </tr>
+      </thead>
+        <tbody>
+        {{ content }}
+      </tbody>
+    </table>
 </body>
 </html>

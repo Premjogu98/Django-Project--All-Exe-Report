@@ -55,17 +55,17 @@
             
         </div>
     </div>
-    <form action="export-to-csv" method="POST">
-        {% csrf_token %}
-        <div class="row 0-export-div" style="display: none;">
-            <div class="col-lg-10">
-                <p><b>Tips: </b> <b>1. Status Field: </b> 1=Working<b> | </b>2=GTS_Maintenance<b> | </b>3=Website_Issue<b> | </b>4=GTS_Stopped<br></p>
+    <div>
+        <form action="export-to-csv" method="POST">
+            {% csrf_token %}
+            <div class="0-export-div" style="display: block; text-align: end; margin: 18px 0px 18px 0px;">
+                <button type="submit" class="btn btn-outline-primary">Export Data To CSV</button>
             </div>
-            <div class="col-lg-2">
-            <button type="submit" class="btn btn-outline-primary" >Export Data To CSV</button></div>
-        </div>
-        <input type="text" id='html_table_input' name="html_table_input" class="html_table_input" style="display: none;" value="" />
-    </form>
+            <input type="text" id='html_table_input' name="html_table_input" class="html_table_input" style="display: none;" value="" />
+        </form>
+        <button type="submit" id="send-email" class="btn btn-outline-danger">Send Email</button>
+        <input type="text" id='send_Email_dic' name="send_Email_dic" class="send_Email_dic" style="display: none;" value="" />
+    </div>
     <div id='table_detail' name="table_detail" class="table-responsive-lg" style="overflow: auto; white-space: nowrap; display: none; height: 500px;">
     </div>
     
@@ -86,6 +86,7 @@
             if ((category == "") || (category == null)){
                 $('#alert').html('<div class="alert alert-danger alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button>&#128545<strong>Error!</strong> Please Select Category</div>');
                 $('#alert').css({'display':'block','margin-bottom': '3px'});
+                $('#loader_div').css({'display':'none'});
             }
             else 
             {
@@ -103,12 +104,31 @@
                         $('#loader_div').css({'display':'none'});
                         $('#table_detail').css({'display':'block'});
                         $('.0-export-div').css({'display':'block'});
-                        $('#table_detail').html(return_data);
-                        $("#html_table_input").val(return_data);
+                        $('#table_detail').html(return_data[0]);
+                        $("#html_table_input").val(return_data[0]);
+                        $("#send_Email_dic").val(return_data[1])
                     }
                 });
             }
         });
     });
+    $(document).ready(function(){
+        $("#send-email").click(function(){
+            $("#send-email").html("Sending Email......");
+            $.ajax({
+                    type:"POST",
+                    url:"Send-email",
+                    data:{
+                        send_Email_dic:$('#send_Email_dic').val(),
+                        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                    },
+                    success:function(return_data){
+                        $("#send-email").html("Send Email");
+                        alert('done')
+                    }
+                });
+        });
+    });
+    
 </script>
 {% endblock %}

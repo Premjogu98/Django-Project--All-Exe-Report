@@ -11,12 +11,6 @@
   <div class="d-flex justify-content-center add-source">
     <h2 class="add-source-h">Add Source</h2>
   </div>
-  <div class="container-fluid border border-success tips">
-    <p><b>Tips: </b><br><b>1. Is English Field: </b> 0=English<b> | </b>1=NonEnglish<b> | </b>2=English &
-      NonEnglish<br>
-      <b>2. Status Field: </b> 1=Working<b> | </b>2=GTS_Maintenance<b> | </b>3=Website_Issue<b> | </b>4=GTS_Stopped<br>
-    </p>
-  </div>
   <div class="container-fluid">
     <div class="d-flex justify-content-center ">
       <div class="shadow-lg p-3 mb-5 bg-white rounded">
@@ -79,19 +73,19 @@
               <label for="is_english">Is English</label>
               <select name="is_english" class="drop" id="is_english">
                 <option selected="selected" disabled> Select </option>
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
+                <option value="0">English</option>
+                <option value="1">Non English</option>
+                <option value="2">English & NonEnglish</option>
               </select>
             </div>
             <div class="col-md-1 form-group">
               <label for="status">Status</label>
               <select name="status" class="drop" id="status">
                 <option selected="selected" disabled> Select</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
+                <option value="1">Working</option>
+                <option value="2">GTS Maintenance</option>
+                <option value="3">Website Issue</option>
+                <option value="4">GTS Stopped</option>
               </select>
             </div>
             <div class="col-md-5 form-group">

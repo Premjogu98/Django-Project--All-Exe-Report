@@ -116,25 +116,25 @@
                                             <option value="Python">Python</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-1 form-group">
+                                    <div class="col-md-2 form-group">
                                         <label for="is_english">Is English</label>
                                         <select name="is_english" class="drop" id="is_english">
-                                            <option selected="selected" disabled> Select </option>
-                                            <option value="0">0</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
+                                          <option selected="selected" disabled> Select </option>
+                                          <option value="0">English</option>
+                                          <option value="1">Non English</option>
+                                          <option value="2">English & NonEnglish</option>
                                         </select>
-                                    </div>
-                                    <div class="col-md-1 form-group">
+                                      </div>
+                                      <div class="col-md-2 form-group">
                                         <label for="status">Status</label>
                                         <select name="status" class="drop" id="status">
-                                            <option selected="selected" disabled> Select</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
+                                          <option selected="selected" disabled> Select</option>
+                                          <option value="1">Working</option>
+                                          <option value="2">GTS Maintenance</option>
+                                          <option value="3">Website Issue</option>
+                                          <option value="4">GTS Stopped</option>
                                         </select>
-                                    </div>
+                                      </div>
                                     <div class="col-md-4 form-group">
                                         <label for="tender_url">Source URL</label>
                                         <input type="text" name="tender_url" class="form-control" id="tender_url" placeholder="http://www.tenderurl.com">
@@ -172,16 +172,16 @@
         
       </footer>
 </div>
-    {% endblock %}
+{% endblock %}
 
-    {% block script %}
-    <script>
-        $(document).ready(function () {
-            $('#example').DataTable();
-        });
-    </script>
+{% block script %}
+<script>
+    $(document).ready(function () {
+        $('#example').DataTable();
+    });
+</script>
 
-    <script>
+<script>
     function clear_modal_elements(id_name) {
         jQuery("#"+id_name).find(':input').each(function() {
             switch(this.type) {

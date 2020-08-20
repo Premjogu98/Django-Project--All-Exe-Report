@@ -73,7 +73,7 @@ def source_list(request):
     source_data_list = exe_DB_cursor.fetchall()
     source_data_list = list(source_data_list)
     source_data_list = [list(tup) for tup in source_data_list]
-    print(exe_runby_data)
+    # print(exe_runby_data)
     source_details = {'source_data_list': source_data_list,'exe_runby_list':exe_runby_data,'Country_ISO_list':Country_ISO_data,'exe_developer_list': exe_developer_data,}
 
     return render(request, 'source_list.html',source_details)
@@ -554,86 +554,101 @@ def zero_count(request):
         Category = request.POST['Category']
         from_date = request.POST['from_date']
         to_date = request.POST['to_date']
-        exe_DB_cursor = connection.cursor()
-        exe_DB_cursor.execute("""SELECT sm.source_name,sm.country_iso,sm.avg_tender,sm.status,sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                                INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                                INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id ORDER BY avg_tender ASC""")
+        sign = '<>'
+        if Category != 'all':
+            if Category == 'in':
+                sign = '='
+            a = 0 
+            while a == 0:
+                try:
+                    exe_DB_cursor = connection.cursor()
+                    exe_DB_cursor.execute(f"""SELECT sm.source_name,sm.country_iso,sm.avg_tender,CASE sm.status WHEN '1' THEN 'Working' WHEN '2' THEN 'GTS Maintenance' WHEN '3' THEN 'Website Issue' WHEN '4' THEN 'GTS Stopped' ELSE '-' END AS `status`,
+                                            sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
+                                            WHERE sm.country_iso {sign} '{Category}'
+                                            ORDER BY avg_tender DESC""")
+                    a = 1
+                except Exception as e:
+                    print(e)
+                    connection.close()
+                    time.sleep(2)
+                    a = 0
+                                    
+        else:
+            a = 0 
+            while a == 0:
+                try:
+                    exe_DB_cursor = connection.cursor()
+                    exe_DB_cursor.execute(f"""SELECT sm.source_name,sm.country_iso,sm.avg_tender,CASE sm.status WHEN '1' THEN 'Working' WHEN '2' THEN 'GTS Maintenance' WHEN '3' THEN 'Website Issue' WHEN '4' THEN 'GTS Stopped' ELSE '-' END AS `status`,
+                                            sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id ORDER BY avg_tender DESC""")
+                    a = 1
+                except Exception as e:
+                    print(e)
+                    connection.close()
+                    time.sleep(2)
+                    a = 0
+
         data = exe_DB_cursor.fetchall()
+        
         source_list = [list(tup) for tup in data]
+        now = datetime_obj.now()
+        main_date = now.strftime("%Y-%m-%d")
         print(f'Category : {Category}')
         print(f'from_date : {from_date}')
         print(f'from_date : {to_date}')
-        source_detail_tr = ""
-        for source in source_list[0:100]:
 
-            if Category == "all" and from_date != "" and to_date != "":
+        main_Category = ''
+        if Category == 'all':
+            main_Category = 'All'
+        elif Category == 'in':
+            main_Category = 'India'
+        elif Category == 'none-in':
+            main_Category = 'Other Than India'
+        email_user_dic = {}
+        email_user_dic[f"email_id"] = []
+        for user_email in exe_runby_data:
+            email_user_dic["email_id"].append(str(user_email[2]))
+        if from_date != "" and to_date != "":
+            email_user_dic["date"] = f'<h3 style="color:red">{main_Category} Zero Tender Report From: <b>{from_date}</b> To: <b>{to_date}</b></h3>'
+        elif from_date != "" and to_date == "":
+            email_user_dic["date"] = f'<h3 style="color:red">{main_Category} Zero Tender Report From: <b>{from_date}</b> To: <b>{main_date}</b></h3>'
+        else:
+            email_user_dic["date"] = f'<h3 style="color:red">{main_Category} Zero Tender Report Date: <b>{main_date}</b></h3>'
+        for user in exe_runby_data:
+            email_user_dic[f"{user[1]}"] = []
+        source_detail_tr = ""
+        for source in source_list[0:10]:
+            if from_date != "" and to_date != "":
                 exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND (DATE(added_on) BETWEEN '{str(from_date)}' AND '{str(to_date)}')")
                 data = exe_DB_cursor.fetchone()
                 data_list = list(data)
                 if data_list[0] == 0:
-                    source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
-            elif Category == "all" and from_date != "" and to_date == "":
+                    tr = f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+                    source_detail_tr += tr
+                    email_user_dic[f'{str(source[5])}'].append(str(tr))
+            elif from_date != "" and to_date == "":
                 exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) >= '{str(from_date)}'")
                 data = exe_DB_cursor.fetchone()
                 data_list = list(data)
                 if data_list[0] == 0:
-                    source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
-            elif Category == "all" and from_date == "" and to_date == "":
+                    tr = f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+                    source_detail_tr += tr
+                    email_user_dic[f'{str(source[5])}'].append(str(tr))
+            elif from_date == "" and to_date == "":
                 exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) = CURDATE()")
                 data = exe_DB_cursor.fetchone()
                 data_list = list(data)
                 if data_list[0] == 0:
-                    source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+                    tr = f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
+                    source_detail_tr += tr
+                    email_user_dic[f'{str(source[5])}'].append(str(tr))
             #=============================================================================================================================
             
-            elif Category == "none-in" and from_date != "" and to_date != "":
-                if str(source[1]) != 'IN':
-                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND (DATE(added_on) BETWEEN '{str(from_date)}' AND '{str(to_date)}')")
-                    data = exe_DB_cursor.fetchone()
-                    data_list = list(data)
-                    if data_list[0] == 0:
-                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
-            elif Category == "none-in" and from_date != "" and to_date == "":
-                if str(source[1]) != 'IN':
-                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) >= '{str(from_date)}'")
-                    data = exe_DB_cursor.fetchone()
-                    data_list = list(data)
-                    if data_list[0] == 0:
-                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
-            elif Category == "none-in" and from_date == "" and to_date == "":
-                if str(source[1]) != 'IN':
-                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) = CURDATE()")
-                    data = exe_DB_cursor.fetchone()
-                    data_list = list(data)
-                    if data_list[0] == 0:
-                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
-
-            #=============================================================================================================================
-
-            elif Category == "in" and from_date != "" and to_date != "":
-                if str(source[1]) == 'IN':
-                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND (DATE(added_on) BETWEEN '{str(from_date)}' AND '{str(to_date)}')")
-                    data = exe_DB_cursor.fetchone()
-                    data_list = list(data)
-                    if data_list[0] == 0:
-                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
-
-            elif Category == "in" and from_date != "" and to_date == "":
-                if str(source[1]) == 'IN':
-                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) >= '{str(from_date)}'")
-                    data = exe_DB_cursor.fetchone()
-                    data_list = list(data)
-                    if data_list[0] == 0:
-                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
-
-            elif Category == "in" and from_date == "" and to_date == "":
-                if str(source[1]) == 'IN':
-                    exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND DATE(added_on) = CURDATE()")
-                    data = exe_DB_cursor.fetchone()
-                    data_list = list(data)
-                    if data_list[0] == 0:
-                        source_detail_tr += f"<tr><td>{str(source[0])}</td><td>{str(source[5])}</td><td>{str(source[6])}</td><td>{str(source[2])}</td><td>{str(source[3])}</td><td><a href='{str(source[4])}' target='_blank'>Click Here</a></td></tr>"
             print(f'Done: {source[0]}')
+        print(email_user_dic)
         table_html =  f""" <table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
                             <thead>
                                 <tr>
@@ -649,26 +664,51 @@ def zero_count(request):
                                 {str(source_detail_tr)}
                             </tbody>
                         </table>"""
-        return JsonResponse(str(table_html), safe=False)
+        main_list = [table_html,str(email_user_dic)]
+        return JsonResponse(main_list, safe=False)
 
     return render(request, 'Zero_count_page.html')
 
 
 def Send_email(request):
-    #  send_mail('Hello This is Subject',
-    #  'This is Message Body',
-    #  'premjogu98@gmail.com',
-    #  ['premtani007@gmail.com'],
-    #  fail_silently=False)
-    html_content = render_to_string('email_template.html',{'title':'Test Email','content':'this html content'})
-    text_content = strip_tags(html_content)
-    email = EmailMultiAlternatives(
-        'test email this is subject',
-        text_content,
-        settings.EMAIL_HOST_USER,
-        ['premtani007@gmail.com']
-    )
-    email.attach_alternative(html_content,'text/html')
-    email.send()
-    return HttpResponse('Email Send Done')
+    if request.method == 'POST':
+        send_Email_dic = request.POST['send_Email_dic']
+        send_Email_dic = send_Email_dic.replace("'",'"').replace('href=""',"href=''").replace('target="_blank"',"target='_blank'").replace('style="color:red"',"style='color:red'")
+        Email_dic = json.loads(f'{send_Email_dic}')
+        Email_id_list = Email_dic.get('email_id')
+        H3_date = Email_dic.get('date')
+        del Email_dic['date']  
+        for user_tr_list in Email_dic.values():
+            total_tr = ''
+            for tr in user_tr_list:
+                total_tr += str(tr)
+            if total_tr != '':
+                total_tr = total_tr.replace("'",'"').replace('<td>','<td style="border: 1px solid black; border-collapse: collapse;">')
+
+                table = f"""{H3_date}<table style="width:100%; border: 1px solid black; border-collapse: collapse;">
+                                <thead style="text-align: left;">
+                                    <tr>
+                                        <th style="border: 1px solid black; border-collapse: collapse;">Source Name</th>
+                                        <th style="border: 1px solid black; border-collapse: collapse;">EXE Run By</th>
+                                        <th style="border: 1px solid black; border-collapse: collapse;">EXE Developer</th>
+                                        <th style="border: 1px solid black; border-collapse: collapse;">Tender AVG</th>
+                                        <th style="border: 1px solid black; border-collapse: collapse;">Status</th>
+                                        <th style="border: 1px solid black; border-collapse: collapse;">Tender Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="text-align: left;">
+                                    {total_tr}
+                                </tbody>
+                                </table>"""
+                # html_content = render_to_string('email_template.html',{'title':'Test Email','content': str(total_tr)})
+                # text_content = strip_tags(html_content)
+                email = EmailMultiAlternatives(
+                    'Zero Tender Report',
+                    'its body',
+                    settings.EMAIL_HOST_USER,
+                    Email_id_list
+                )
+                email.attach_alternative(table,'text/html')
+                email.send()
+        return HttpResponse('Email Send Done')
      
