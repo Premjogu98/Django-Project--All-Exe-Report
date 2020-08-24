@@ -14,7 +14,7 @@
 {% csrf_token %}
 <div class="container-fluid" id="main-div">
     <div class="d-flex justify-content-center source-list">
-        <h2 class="source-list-h">Source list</h2>
+        <h2 class="source-list-h">Source Details</h2>
     </div>
 
     <div class="row" style="border-bottom: 1px solid black;">
@@ -40,8 +40,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == '0' or source.0.0 == '1' or source.0.0 == '2'  or source.0.0 == '3' or source.0.0 == '4' or source.0.0 == '5' or source.0.0 == '6' or source.0.0 == '7' or source.0.0 == '8' or source.0.0 == '9' %}
                     <div class="col-lg-2">
-                        <input type="checkbox" id="source_name_number" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_number"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_number" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_number"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -52,8 +52,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'a' or source.0.0 == 'A' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_a" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_a"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_a" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_a"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -64,8 +64,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'b' or source.0.0 == 'B' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_b" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_b"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_b" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_b"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -76,8 +76,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'c' or source.0.0 == 'C' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_c" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_c"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_c" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_c"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -88,8 +88,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'd' or source.0.0 == 'D' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_d" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_d"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_d" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_d"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -100,8 +100,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'e' or source.0.0 == 'E' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_e" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_e"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_e" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_e"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -112,8 +112,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'f' or source.0.0 == 'F' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_f" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_f"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_f" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_f"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -124,8 +124,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'g' or source.0.0 == 'G' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_g" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_g"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_g" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_g"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -136,8 +136,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'h' or source.0.0 == 'H' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_h" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_h"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_h" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_h"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -148,8 +148,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'i' or source.0.0 == 'I' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_i" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_i"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_i" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_i"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -160,8 +160,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'j' or source.0.0 == 'J' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_j" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_j"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_j" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_j"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -172,8 +172,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'k' or source.0.0 == 'K' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_k" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_k"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_k" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_k"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -184,8 +184,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'l' or source.0.0 == 'L' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_l" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_l"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_l" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_l"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -196,8 +196,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'm' or source.0.0 == 'M' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_m" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_m"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_m" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_m"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -208,8 +208,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'n' or source.0.0 == 'N' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_n" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_n"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_n" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_n"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -220,8 +220,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'o' or source.0.0 == 'O' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_o" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_o"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_o" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_o"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -232,8 +232,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'p' or source.0.0 == 'P' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_p" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_p"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_p" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_p"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -244,8 +244,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'q' or source.0.0 == 'Q' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_q" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_q"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_q" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_q"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -256,8 +256,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'r' or source.0.0 == 'R' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_r" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_r"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_r" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_r"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -268,8 +268,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 's' or source.0.0 == 'S' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_s" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_s"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_s" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_s"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -280,8 +280,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 't' or source.0.0 == 'T' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_t" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_t"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_t" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_t"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -292,8 +292,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'u' or source.0.0 == 'U' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_u" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_u"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_u" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_u"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -304,8 +304,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'v' or source.0.0 == 'V' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_v" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_v"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_v" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_v"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -316,8 +316,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'w' or source.0.0 == 'W' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_w" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_w"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_w" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_w"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -328,8 +328,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'x' or source.0.0 == 'X' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_x" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_x"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_x" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_x"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -340,8 +340,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'y' or source.0.0 == 'Y' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_y" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_y"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_y" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_y"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}
@@ -352,8 +352,8 @@
             {% for source in source_list %}
                 {% if source.0.0 == 'z' or source.0.0 == 'Z' %}
                     <div class="col-lg-3">
-                        <input type="checkbox" id="source_name_z" name="source-name" value="{{ source.0 }}">
-                        <label for="source_name_z"> {{ source.0 }}</label><br>
+                        <input type="checkbox" id="source_name_{{ source.0 }}_z" name="source-name" value="{{ source.0 }}">
+                        <label for="source_name_{{ source.0 }}_z"> {{ source.0 }}</label><br>
                     </div>
                 {% endif %}    
             {% endfor %}

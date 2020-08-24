@@ -41,26 +41,40 @@ def country_db_connection():
             a = 0
             time.sleep(10)
 
+while True:
+    try:
+        mydb = country_db_connection()
+        mycursor = mydb.cursor()
+        mycursor.execute("SELECT * FROM dms_country_tbl")
+        Country_ISO_data = mycursor.fetchall()#  Inside Country_ISO_data variable --> [{'Code': 'AD', 'Country': 'ANDORRA '}, {'Code': 'AE', 'Country': 'UNITED ARAB EMIRATES '}]
+        mycursor.close()
+        mydb.close()
+        break
+    except Exception as e:
+        print(e)
 
-mydb = country_db_connection()
-mycursor = mydb.cursor()
-mycursor.execute("SELECT * FROM dms_country_tbl")
-Country_ISO_data = mycursor.fetchall()#  Inside Country_ISO_data variable --> [{'Code': 'AD', 'Country': 'ANDORRA '}, {'Code': 'AE', 'Country': 'UNITED ARAB EMIRATES '}]
-mycursor.close()
-mydb.close()  
+while True:
+    try:
+        exe_DB_cursor = connection.cursor()
+        exe_DB_cursor.execute("SELECT * FROM exe_developer_tbl")
+        exe_developer_data = exe_DB_cursor.fetchall() # data is tuple next step tuple convert to list
+        exe_developer_data = list(exe_developer_data)  # inside list multiple tuples like this [(1, 2), (3, 4), (5, 6)] 
+        exe_developer_data = [list(tup) for tup in exe_developer_data] # using list comprehension  || convert list of tuples to list of list 
+        break
+    except Exception as e:
+        print(e)
 
+while True:
+    try:
+        exe_DB_cursor.execute("SELECT * FROM exe_runby_tbl")
+        exe_runby_data = exe_DB_cursor.fetchall()
+        exe_runby_data = list(exe_runby_data)
+        exe_runby_data = [list(tup) for tup in exe_runby_data]
+        break
+    except Exception as e:
+        print(e)
 
-exe_DB_cursor = connection.cursor()
-exe_DB_cursor.execute("SELECT * FROM exe_developer_tbl")
-exe_developer_data = exe_DB_cursor.fetchall() # data is tuple next step tuple convert to list
-exe_developer_data = list(exe_developer_data)  # inside list multiple tuples like this [(1, 2), (3, 4), (5, 6)] 
-exe_developer_data = [list(tup) for tup in exe_developer_data] # using list comprehension  || convert list of tuples to list of list 
-
-exe_DB_cursor.execute("SELECT * FROM exe_runby_tbl")
-exe_runby_data = exe_DB_cursor.fetchall()
-exe_runby_data = list(exe_runby_data)
-exe_runby_data = [list(tup) for tup in exe_runby_data]
-
+email_user_dic = {}
 
 def index(request):
 
@@ -193,14 +207,13 @@ def Add_source(request):
                 return HttpResponse('Data Added')
     return render(request, 'Add_source.html',test_data)
 
-
 def source_details(request):
     exe_DB_cursor = connection.cursor()
     exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
     data = exe_DB_cursor.fetchall()
     source_list = [list(tup) for tup in data]
     # print(source_list)
-    data = {'source_list':source_list[0:10]}
+    data = {'source_list':source_list}
     
     if request.method == 'POST':
         source_list_text = request.POST['source_list_text']
@@ -357,7 +370,6 @@ def source_details(request):
         
     return render(request, 'source_details.html',data)
 
-
 def All_source_details(request):
     
     # exe_DB_cursor = connection.cursor()
@@ -394,7 +406,7 @@ def All_source_details(request):
                 table_th += f"<th>{str(date_month)}</th>" # add th tag on top off tbody like this <th>14-Aug</th> 
                 from_date_obj = from_date_obj + timedelta(days=1) # add one date on from date like 2020-08-14 + 1day = 2020-08-15 
             
-            for source_name in source_data_list[0:10]:  # total source list with detail
+            for source_name in source_data_list:  # total source list with detail
                 m_count_td  = ''
                 # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
@@ -509,7 +521,6 @@ def All_source_details(request):
             
             return JsonResponse(str(table_html), safe=False)
 
-
 def Export_csv(request):
     if request.method == 'POST':
         now = datetime_obj.now()
@@ -547,17 +558,14 @@ def Export_csv(request):
         response['Content-Disposition'] = f'attachment; filename="sourceDetails{main_date}.csv"'
         return response
 
-
 def zero_count(request):
 
     if request.method == 'POST':
         Category = request.POST['Category']
         from_date = request.POST['from_date']
         to_date = request.POST['to_date']
-        sign = '<>'
-        if Category != 'all':
-            if Category == 'in':
-                sign = '='
+        
+        if Category == 'IN':
             a = 0 
             while a == 0:
                 try:
@@ -566,16 +574,32 @@ def zero_count(request):
                                             sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
                                             INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
                                             INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
-                                            WHERE sm.country_iso {sign} '{Category}'
+                                            WHERE sm.country_iso = 'IN'
                                             ORDER BY avg_tender DESC""")
                     a = 1
                 except Exception as e:
                     print(e)
                     connection.close()
                     time.sleep(2)
-                    a = 0
-                                    
-        else:
+                    a = 0  
+        elif Category == 'none-in':
+            a = 0 
+            while a == 0:
+                try:
+                    exe_DB_cursor = connection.cursor()
+                    exe_DB_cursor.execute(f"""SELECT sm.source_name,sm.country_iso,sm.avg_tender,CASE sm.status WHEN '1' THEN 'Working' WHEN '2' THEN 'GTS Maintenance' WHEN '3' THEN 'Website Issue' WHEN '4' THEN 'GTS Stopped' ELSE '-' END AS `status`,
+                                            sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
+                                            WHERE sm.country_iso <> 'IN'
+                                            ORDER BY avg_tender DESC""")
+                    a = 1
+                except Exception as e:
+                    print(e)
+                    connection.close()
+                    time.sleep(2)
+                    a = 0                        
+        elif Category == 'all':
             a = 0 
             while a == 0:
                 try:
@@ -607,10 +631,8 @@ def zero_count(request):
             main_Category = 'India'
         elif Category == 'none-in':
             main_Category = 'Other Than India'
-        email_user_dic = {}
-        email_user_dic[f"email_id"] = []
-        for user_email in exe_runby_data:
-            email_user_dic["email_id"].append(str(user_email[2]))
+
+
         if from_date != "" and to_date != "":
             email_user_dic["date"] = f'<h3 style="color:red">{main_Category} Zero Tender Report From: <b>{from_date}</b> To: <b>{to_date}</b></h3>'
         elif from_date != "" and to_date == "":
@@ -618,9 +640,9 @@ def zero_count(request):
         else:
             email_user_dic["date"] = f'<h3 style="color:red">{main_Category} Zero Tender Report Date: <b>{main_date}</b></h3>'
         for user in exe_runby_data:
-            email_user_dic[f"{user[1]}"] = []
+            email_user_dic[f"{user[1]}"] = [f"{str(user[2])}"]
         source_detail_tr = ""
-        for source in source_list[0:10]:
+        for source in source_list:
             if from_date != "" and to_date != "":
                 exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source[0])}' AND (DATE(added_on) BETWEEN '{str(from_date)}' AND '{str(to_date)}')")
                 data = exe_DB_cursor.fetchone()
@@ -648,7 +670,7 @@ def zero_count(request):
             #=============================================================================================================================
             
             print(f'Done: {source[0]}')
-        print(email_user_dic)
+        # print(email_user_dic)
         table_html =  f""" <table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
                             <thead>
                                 <tr>
@@ -669,23 +691,31 @@ def zero_count(request):
 
     return render(request, 'Zero_count_page.html')
 
-
 def Send_email(request):
     if request.method == 'POST':
-        send_Email_dic = request.POST['send_Email_dic']
-        send_Email_dic = send_Email_dic.replace("'",'"').replace('href=""',"href=''").replace('target="_blank"',"target='_blank'").replace('style="color:red"',"style='color:red'")
-        Email_dic = json.loads(f'{send_Email_dic}')
-        Email_id_list = Email_dic.get('email_id')
-        H3_date = Email_dic.get('date')
-        del Email_dic['date']  
-        for user_tr_list in Email_dic.values():
+        html_table_input = request.POST['html_table_input']
+        # send_Email_dic = send_Email_dic.replace("'",'"').replace('href=""',"href=''").replace('target="_blank"',"target='_blank'").replace('style="color:red"',"style='color:red'")
+        # print(email_user_dic)
+        # Email_dic = json.loads(f'{send_Email_dic}')
+        if html_table_input == '':
+            return HttpResponse('No Data Found')
+        try:
+            H3_date = email_user_dic.get('date')
+        except:
+            return HttpResponse('Something Wentwrong on Send_email function (email_user_dic)')
+        del email_user_dic['date']
+        for user_tr_list in email_user_dic.values():
             total_tr = ''
+            user_email_id = user_tr_list[0]
+            # print(user_email_id)
+            del user_tr_list[0]
             for tr in user_tr_list:
                 total_tr += str(tr)
+                # print(tr)
             if total_tr != '':
                 total_tr = total_tr.replace("'",'"').replace('<td>','<td style="border: 1px solid black; border-collapse: collapse;">')
-
-                table = f"""{H3_date}<table style="width:100%; border: 1px solid black; border-collapse: collapse;">
+                # 'r' or 'R'. Python raw string treats backslash (\) as a literal character.
+                table = f"""{str(H3_date)}<table style="width:100%; border: 1px solid black; border-collapse: collapse;">
                                 <thead style="text-align: left;">
                                     <tr>
                                         <th style="border: 1px solid black; border-collapse: collapse;">Source Name</th>
@@ -696,19 +726,22 @@ def Send_email(request):
                                         <th style="border: 1px solid black; border-collapse: collapse;">Tender Link</th>
                                     </tr>
                                 </thead>
-                                <tbody style="text-align: left;">
-                                    {total_tr}
+                                <tbody style="text-align: left;">{total_tr}
                                 </tbody>
                                 </table>"""
+                # print(table)
                 # html_content = render_to_string('email_template.html',{'title':'Test Email','content': str(total_tr)})
                 # text_content = strip_tags(html_content)
-                email = EmailMultiAlternatives(
-                    'Zero Tender Report',
-                    'its body',
-                    settings.EMAIL_HOST_USER,
-                    Email_id_list
-                )
-                email.attach_alternative(table,'text/html')
-                email.send()
-        return HttpResponse('Email Send Done')
+                try:
+                    email = EmailMultiAlternatives(
+                        'Zero Tender Report',
+                        'Zero Tender Report',
+                        settings.EMAIL_HOST_USER,
+                        [f'{user_email_id}']
+                    )
+                    email.attach_alternative(table,'text/html')
+                    email.send()
+                except:
+                    return HttpResponse('Email Failed')
+        return HttpResponse('Email Send Successfully!!!!')
      
