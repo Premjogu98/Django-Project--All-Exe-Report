@@ -1,6 +1,6 @@
 {% extends 're_use_html_ele.html' %}
 {% load static %}
-{% block title %}Source Details{% endblock %}
+{% block title %}QC Details{% endblock %}
 {% block head %}
 <link rel="stylesheet" type="text/css"
     href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
@@ -14,7 +14,7 @@
 {% csrf_token %}
 <div class="container-fluid" id="main-div">
     <div class="d-flex justify-content-center source-list">
-        <h2 class="source-list-h">Source Details</h2>
+        <h2 id="source_list_h" name='source_list_h' class="source-list-h">QC Details</h2>
     </div>
 
     <div class="row" style="border-bottom: 1px solid black;">
@@ -358,7 +358,7 @@
                 {% endif %}    
             {% endfor %}
             <div class="source-list-footer">
-                <input type="text" style="display: none;" id='source_list_text' value=""/>
+                <input type="text" style="display: none;" id='source_list_text' name="source_list_text" value=""/>
                 <label style="font-size: 20px;">From: &nbsp;</label><input id='drop_from_date' type="date"/>
                 <label style="font-size: 20px;">&nbsp;To: &nbsp;</label><input id='drop_to_date' type="date"/>&nbsp;&nbsp;
                 <button type="button" id='source-list-get-data' class="btn btn-outline-primary source-list-get-data" data-toggle="collapse" data-target="#source-list-div">Search</button>
@@ -390,6 +390,9 @@
         </div>
     </div>
 
+    <div id="alert" class="alert-Error" style="display: none;">
+    </div>
+
     <div class="csv-email" style="display:none; text-align: end; margin: 20px 0px 20px 0px;">
         <ul class="list-inline">
             <li class="list-inline-item">
@@ -398,6 +401,12 @@
                     <button type="submit" class="btn btn-outline-primary">Export Data To CSV</button>
                     <input type="text" id='html_table_input' name="html_table_input" class="html_table_input" style="display: none;" value="" />
                 </form>
+            </li>
+            <li class="list-inline-item">
+                <div class="form-inline pull-right">
+                    <button type="button" id="send-email" class="btn btn-outline-danger">Send Email</button>
+                    <!-- <input type="text" id='send_Email_dic' name="send_Email_dic" class="send_Email_dic" style="display: none;" value="" /> -->
+                </div>
             </li>
         </ul>
     </div>
@@ -455,7 +464,7 @@
             $("#source_list_text").val(source_list);
             $.ajax({
                 type:"POST",
-                url:"source-details",
+                url:"QC-Detail",
                 data:{
                     drop_from_date:$('#drop_from_date').val(),
                     drop_to_date:$('#drop_to_date').val(),
@@ -478,4 +487,33 @@
     });
 </script>
 
+<script>
+    $(document).ready(function(){
+        $("#send-email").click(function(){
+            $("#send-email").html("Email Sending......");
+            $.ajax({
+                    type:"POST",
+                    url:"Send-email",
+                    data:{
+                        html_table_input:$('#html_table_input').val(),
+                        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                    },
+                    success:function(return_data){
+                        $("#send-email").html("Send Email");
+                        if(return_data == 'Email Send Successfully!!!!'){
+                            $('#alert').html('<div class="alert alert-success alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button><strong>Inserted &nbsp;</strong> &#128591 &nbsp; '+return_data+' &nbsp; &#128591</div>');
+                            $('#alert').css({'display':'block','margin-bottom': '40px','margin-top': '5px'});
+                        }
+                        else
+                        {
+                            $('#alert').html('<div class="alert alert-danger alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button>&#128545<strong>Error!</strong> &nbsp; &nbsp;'+return_data+'</div>');
+                            $('#alert').css({'display':'block','margin-bottom': '40px','margin-top': '5px'});
+                            // $("#loader_div").css("display", "none");
+                        }
+                        
+                    }
+                });
+        });
+    });
+</script>
 {% endblock %}

@@ -82,7 +82,7 @@
                                             <option selected="selected" disabled> Select </option>
                                             <option value='MULTIPLE'>MULTIPLE</option>
                                             {% for country in Country_ISO_list %}
-                                            <option value={{ country.Code }}>{{ country.Country }}</option>
+                                            <option value={{ country.0 }}>{{ country.1 }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>

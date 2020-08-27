@@ -12,6 +12,9 @@ urlpatterns = [
     path('export-to-csv',views.Export_csv , name='export-to-csv'),
     path('Zero-count-page',views.zero_count , name='Zero-count-page'),
     path('Send-email',views.Send_email , name='Send-email'),
+    path('QC-Detail',views.QC_Detail , name='QC-Detail'),
+    path('Login-page',views.Login_page , name='Login-page'),
+
 
 
 ]

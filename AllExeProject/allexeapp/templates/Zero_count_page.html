@@ -119,8 +119,8 @@
                         $('#loader_div').css({'display':'none'});
                         $('#table_detail').css({'display':'block'});
                         $('.csv-email').css({'display':'block'});
-                        $('#table_detail').html(return_data[0]);
-                        $("#html_table_input").val(return_data[0]);
+                        $('#table_detail').html(return_data);
+                        $("#html_table_input").val(return_data);
                     }
                 });
             }
@@ -128,12 +128,12 @@
     });
     $(document).ready(function(){
         $("#send-email").click(function(){
-            $("#send-email").html("Sending Email......");
+            $("#send-email").html("Email Sending......");
             $.ajax({
                     type:"POST",
                     url:"Send-email",
                     data:{
-                        send_Email_dic:$('#send_Email_dic').val(),
+                        html_table_input:$('#html_table_input').val(),
                         csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
                     },
                     success:function(return_data){

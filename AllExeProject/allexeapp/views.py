@@ -22,35 +22,17 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
-def country_db_connection():
-    a = 0
-    while a == 0:
-        try:
-            connection = pymysql.connect(host='185.142.34.92',
-                user='ams',
-                password='TgdRKAGedt%h',
-                db='tenders_db',
-                charset='utf8',
-                cursorclass=pymysql.cursors.DictCursor)
-            print('tenders_db Database Connected')
-            return connection
-        except Exception as e:
-            exc_type , exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print("Error Details : \nFunction Name: " , sys._getframe().f_code.co_name + "\nException: " + str(e) , "\n Exception Type: " , exc_type , "\nFile Name: ", fname ,"\nError Line No: " , exc_tb.tb_lineno)
-            a = 0
-            time.sleep(10)
 
 while True:
     try:
-        mydb = country_db_connection()
-        mycursor = mydb.cursor()
+        mycursor = connection.cursor()
         mycursor.execute("SELECT * FROM dms_country_tbl")
         Country_ISO_data = mycursor.fetchall()#  Inside Country_ISO_data variable --> [{'Code': 'AD', 'Country': 'ANDORRA '}, {'Code': 'AE', 'Country': 'UNITED ARAB EMIRATES '}]
-        mycursor.close()
-        mydb.close()
+        Country_ISO_data = list(Country_ISO_data)  # inside list multiple tuples like this [(1, 2), (3, 4), (5, 6)] 
+        Country_ISO_data = [list(tup) for tup in Country_ISO_data]
         break
     except Exception as e:
+        time.sleep(2)
         print(e)
 
 while True:
@@ -62,6 +44,7 @@ while True:
         exe_developer_data = [list(tup) for tup in exe_developer_data] # using list comprehension  || convert list of tuples to list of list 
         break
     except Exception as e:
+        time.sleep(2)
         print(e)
 
 while True:
@@ -72,6 +55,7 @@ while True:
         exe_runby_data = [list(tup) for tup in exe_runby_data]
         break
     except Exception as e:
+        time.sleep(2)
         print(e)
 
 email_user_dic = {}
@@ -217,20 +201,38 @@ def source_details(request):
     
     if request.method == 'POST':
         source_list_text = request.POST['source_list_text']
-        from_date = request.POST['drop_from_date']
-        to_date = request.POST['drop_to_date']
+        drop_from_date = request.POST['drop_from_date']
+        drop_to_date = request.POST['drop_to_date']
+        top_from_date = request.POST['top_from_date']
+        top_to_date = request.POST['top_to_date']
+        from_date = ''
+        to_date = ''
+        if drop_from_date == '' and drop_to_date == '':
+            from_date = top_from_date
+            to_date = top_to_date
+        elif top_from_date == '' and top_to_date == '':
+            from_date = drop_from_date
+            to_date = drop_to_date
         print(source_list_text)
-        source_list_text = source_list_text.replace(',',',,')
-        selected_source_list = source_list_text.split(',,')
-        source_list = str(selected_source_list).replace('[','').replace(']','')
-        exe_DB_cursor.execute(f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                                INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                                INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
-                                WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC""")
+        print(from_date)
+        print(to_date)
+        if source_list_text != '':
+            source_list_text = source_list_text.replace(',',',,')
+            selected_source_list = source_list_text.split(',,')
+            source_list = str(selected_source_list).replace('[','').replace(']','')
+            exe_DB_cursor.execute(f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                    INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                    INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
+                                    WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC""")
+        else:
+            exe_DB_cursor.execute("""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id order BY sm.id ASC""")
         data = exe_DB_cursor.fetchall()
         source_data_list = list(data)
         source_data_list = [list(tup) for tup in source_data_list]
-        print(source_data_list)
+
+        # print(source_data_list)
 
         if from_date != "" and to_date != "":
             table_html = ''
@@ -249,10 +251,8 @@ def source_details(request):
                 table_th += f"<th>{str(date_month)}</th>"
                 from_date_obj = from_date_obj + timedelta(days=1)
             
-            for source_name in source_data_list:
-                print(source_name)
+            for source_name in source_data_list[0:10]:
                 m_count_td  = ''
-                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
                 total_count_list = []
@@ -279,10 +279,9 @@ def source_details(request):
                 main_total_count_list.append(total_count_list)
                 all_total_count += m_source_count
                 if m_source_count != 0:
-                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                    source_name_with_count += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
                 else:
-                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
-                # source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></tr>'
+                    source_name_with_count += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
                     
             # print(main_total_count_list)
             index_no = 0
@@ -295,7 +294,7 @@ def source_details(request):
 
             # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
             
-            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Selected Source Details From: {from_date} To: {to_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Source Details From: {from_date} To: {to_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
@@ -318,10 +317,8 @@ def source_details(request):
             main_total = 0
             now = datetime_obj.now()
             main_date = now.strftime("%d-%B-%Y")
-            for source_name in source_data_list:
-                print(source_name)
+            for source_name in source_data_list[0:10]:
                 m_count_td  = ''
-                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
                 a = 0 
                 while a == 0 :
@@ -342,14 +339,14 @@ def source_details(request):
                         a = 0 
                 print(f'Done: {source_name}')
                 if m_source_count != 0:
-                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                    source_name_with_count += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
                 else:
-                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
-                # source_name_with_count  += f'{m_source_name_count}{m_count_td}<td>{m_source_count}</td></td>'
+                    source_name_with_count += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                    
             
             # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
 
-            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Selected Source Details Of Current Date: {main_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h"> Source Details Of Current Date: {main_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
                         <thead>
                             <tr>
                                 <th>Source Name</th>
@@ -406,7 +403,7 @@ def All_source_details(request):
                 table_th += f"<th>{str(date_month)}</th>" # add th tag on top off tbody like this <th>14-Aug</th> 
                 from_date_obj = from_date_obj + timedelta(days=1) # add one date on from date like 2020-08-14 + 1day = 2020-08-15 
             
-            for source_name in source_data_list:  # total source list with detail
+            for source_name in source_data_list[0:10]:  # total source list with detail
                 m_count_td  = ''
                 # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
                 m_source_count = 0
@@ -451,7 +448,7 @@ def All_source_details(request):
 
             # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
 
-            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Source Details of From: {from_date} To: {to_date}</h4></div><table id="main_table" name="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Source Details From: {from_date} To: {to_date}</h4></div><table id="main_table" name="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
                         <thead>
                             <tr style="background: #00e7ff;">
                                 <th>Source Name</th>
@@ -526,22 +523,15 @@ def Export_csv(request):
         now = datetime_obj.now()
         main_date = now.strftime("%d%m%Y%H%M")
         response = HttpResponse(content_type='text/csv')
-        
         main_table = request.POST['html_table_input']
         # print(main_table)
         main_table = main_table.replace('\n',' ')
         main_table = re.sub("\s+" , " ", main_table)
-
         Th_list = re.findall(r"(?<=<th>).*?(?=</th>)", main_table)
-        tbody_text = main_table.partition("<tbody>")[2].partition('<tr class="Total">')[0]
+        tbody_text = main_table.partition("<tbody>")[2].partition('<tr class="Total">')[0].replace('style="color: white;background: #ff2f2f;"','').replace('<tr >','<tr>')
         total_text = main_table.partition('<tr class="Total">')[2].partition('</tr>')[0].strip()
-        # print(total_text)
-        tbody_text = tbody_text.replace('<td></td>','')
-        # print(tbody_text)
-        
+        tbody_text = tbody_text.replace('<td></td>','') 
         td_list = tbody_text.split('<tr>')
-        # print(td_list)
-        # print(Th_list)
         writer = csv.writer(response)
         writer.writerow(Th_list)
         for td in td_list:
@@ -686,8 +676,7 @@ def zero_count(request):
                                 {str(source_detail_tr)}
                             </tbody>
                         </table>"""
-        main_list = [table_html,str(email_user_dic)]
-        return JsonResponse(main_list, safe=False)
+        return JsonResponse(table_html, safe=False)
 
     return render(request, 'Zero_count_page.html')
 
@@ -704,6 +693,7 @@ def Send_email(request):
         except:
             return HttpResponse('Something Wentwrong on Send_email function (email_user_dic)')
         del email_user_dic['date']
+        is_there_any_email = 0
         for user_tr_list in email_user_dic.values():
             total_tr = ''
             user_email_id = user_tr_list[0]
@@ -713,7 +703,7 @@ def Send_email(request):
                 total_tr += str(tr)
                 # print(tr)
             if total_tr != '':
-                total_tr = total_tr.replace("'",'"').replace('<td>','<td style="border: 1px solid black; border-collapse: collapse;">')
+                total_tr = total_tr.replace("'",'"').replace('<td>','<td style="border: 1px solid black; border-collapse: collapse;">').replace(' style="color: white;background: #ff2f2f;"','')
                 # 'r' or 'R'. Python raw string treats backslash (\) as a literal character.
                 table = f"""{str(H3_date)}<table style="width:100%; border: 1px solid black; border-collapse: collapse;">
                                 <thead style="text-align: left;">
@@ -743,5 +733,198 @@ def Send_email(request):
                     email.send()
                 except:
                     return HttpResponse('Email Failed')
-        return HttpResponse('Email Send Successfully!!!!')
+                is_there_any_email +=1
+            else:
+                is_there_any_email +=0
+        if is_there_any_email != 0:
+            return HttpResponse('Email Send Successfully!!!!')
+        else:
+            return HttpResponse('There Is No Data Found ')
      
+def QC_Detail(request):
+    exe_DB_cursor = connection.cursor()
+    exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
+    data = exe_DB_cursor.fetchall()
+    source_list = [list(tup) for tup in data]
+    # print(source_list)
+    data = {'source_list':source_list}
+    
+    if request.method == 'POST':
+        source_list_text = request.POST['source_list_text']
+        drop_from_date = request.POST['drop_from_date']
+        drop_to_date = request.POST['drop_to_date']
+        top_from_date = request.POST['top_from_date']
+        top_to_date = request.POST['top_to_date']
+        from_date = ''
+        to_date = ''
+        if drop_from_date == '' and drop_to_date == '':
+            from_date = top_from_date
+            to_date = top_to_date
+        elif top_from_date == '' and top_to_date == '':
+            from_date = drop_from_date
+            to_date = drop_to_date
+        print(source_list_text)
+        if source_list_text != '':
+            source_list_text = source_list_text.replace(',',',,')
+            selected_source_list = source_list_text.split(',,')
+            source_list = str(selected_source_list).replace('[','').replace(']','')
+            exe_DB_cursor.execute(f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                    INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                    INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
+                                    WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC""")
+        else:
+            exe_DB_cursor.execute("""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id order BY sm.id ASC""")
+        data = exe_DB_cursor.fetchall()
+        source_data_list = list(data)
+        source_data_list = [list(tup) for tup in source_data_list]
+
+        # print(source_data_list)
+        now = datetime_obj.now()
+        main_date = now.strftime("%Y-%m-%d")
+        if from_date != "" and to_date != "":
+            email_user_dic["date"] = f'<h3 style="color:red">QC Report From: <b>{from_date}</b> To: <b>{to_date}</b></h3>'
+        elif from_date != "" and to_date == "":
+            email_user_dic["date"] = f'<h3 style="color:red">QC Report From: <b>{from_date}</b> To: <b>{main_date}</b></h3>'
+        else:
+            email_user_dic["date"] = f'<h3 style="color:red">QC Report Date: <b>{main_date}</b></h3>'
+        for user in exe_runby_data:
+            email_user_dic[f"{user[1]}"] = [f"{str(user[2])}"]
+
+        if from_date != "" and to_date != "":
+            table_html = ''
+            table_th = ""
+            source_name_with_count = ''
+            main_total_count_list = []
+            all_total_tr = ''
+            all_total_count = 0
+            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
+            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
+            diff_date = to_date_datetime_obj - from_date_obj
+            diff_date = diff_date.days
+
+            for date in range(int(diff_date)+1):
+                date_month = from_date_obj.strftime("%d-%b")
+                table_th += f"<th>{str(date_month)}</th>"
+                from_date_obj = from_date_obj + timedelta(days=1)
+            
+            for source_name in source_data_list[0:10]:
+                m_count_td  = ''
+                m_source_count = 0
+                from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
+                total_count_list = []
+                for date in range(int(diff_date)+1):
+                    main_date = from_date_obj.strftime("%Y-%m-%d")
+                    a = 0 
+                    while a == 0 :
+                        try:
+                            exe_DB_cursor = connection.cursor()
+                            exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND compulsary_qc = '1' AND DATE(added_on) = '{str(main_date).strip()}'")
+                            data = exe_DB_cursor.fetchone()
+                            data_list = list(data)
+                            total_count_list.append(f'{data_list[0]}')
+                            m_count_td += f'<td>{data_list[0]}</td>'
+                            m_source_count += int(data_list[0])
+                            a = 1
+                        except Exception as e:
+                            print(e)
+                            connection.close()
+                            time.sleep(2)
+                            a = 0 
+                    print(f'Done: {source_name}')
+                    from_date_obj = from_date_obj + timedelta(days=1)
+                main_total_count_list.append(total_count_list)
+                all_total_count += m_source_count
+                if m_source_count == 0:
+                    source_name_with_count += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                else:
+                    tr = f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                    email_user_dic[f'{str(source_name[1])}'].append(str(tr))
+                    source_name_with_count += tr
+                    
+            # print(main_total_count_list)
+            index_no = 0
+            for date in range(int(diff_date)+1):
+                total_count = 0
+                for count_list in main_total_count_list:
+                    total_count += int(count_list[index_no])
+                all_total_tr += f'<td>{str(total_count)}</td>'
+                index_no +=1
+
+            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
+            
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">QC Report From: {from_date} To: {to_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
+                        <thead>
+                            <tr style="background: #00e7ff;">
+                                <th>Source Name</th>
+                                <th>EXE Run By</th>
+                                <th>EXE Developer</th>
+                                {str(table_th)}
+                                <th>Total</th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {str(source_name_with_count)}
+                            <tr class="Total"><td>Total</td><td></td><td></td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
+                        </tbody>
+                    </table>"""
+            return JsonResponse(str(table_html), safe=False)
+        
+        else :
+            source_name_with_count = ""
+            main_source_total = 0
+            main_total = 0
+            now = datetime_obj.now()
+            main_date = now.strftime("%d-%B-%Y")
+            for source_name in source_data_list[0:10]:
+                m_count_td  = ''
+                m_source_count = 0
+                a = 0 
+                while a == 0 :
+                    try:
+                        exe_DB_cursor = connection.cursor()
+                        exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND compulsary_qc = '1' AND DATE(added_on) = CURDATE()")
+                        data = exe_DB_cursor.fetchone()
+                        data_list = list(data)
+                        m_count_td += f'<td>{data_list[0]}</td>'
+                        m_source_count += int(data_list[0])
+                        main_source_total += m_source_count
+                        main_total += m_source_count
+                        a = 1
+                    except Exception as e:
+                        print(e)
+                        connection.close()
+                        time.sleep(2)
+                        a = 0 
+                print(f'Done: {source_name}')
+                if m_source_count == 0:
+                    source_name_with_count += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                else:
+                    tr = f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                    email_user_dic[f'{str(source_name[1])}'].append(str(tr))
+                    source_name_with_count += tr
+            
+            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
+
+            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h"> QC Report Of Current Date: {main_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
+                        <thead>
+                            <tr>
+                                <th>Source Name</th>
+                                <th>EXE Run By</th>
+                                <th>EXE Developer</th>
+                                <th>{str(main_date)}</th> 
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {str(source_name_with_count)}
+                            <tr class="Total"><td>Total</td><td></td><td></td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
+                        </tbody>
+                    </table>"""
+            
+            return JsonResponse(str(table_html), safe=False)
+    return render(request, 'QC_Detail.html',data)
+
+def Login_page(request):
+    return render(request, 'login_page.html')
