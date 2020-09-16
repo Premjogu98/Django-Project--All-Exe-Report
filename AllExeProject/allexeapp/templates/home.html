@@ -1,7 +1,197 @@
 {% extends 're_use_html_ele.html' %}
 {% load static %}
 {% block title %} Home Page {% endblock %}
+{% block head%}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+ {% endblock%}
 {% block body %}
+<!-- <div id="mySidenav" class="sidenav">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <a href="#">Link1</a>
+    <a href="#">Link2</a>
+    <a href="#">Link3</a>
+    <a href="#">Link4</a>
+  </div> -->
+  
+ 
+    <!-- <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776; Filter</span> -->
+<div class="container" style="margin-top: 35px;">
+    <div class="row justify-content-md-center">
+        <div class="col-12 col-md-4" id="count-card1">
+            <div class="row justify-content-md-center cards">
+                <label>{{ total_tender_count }}/{{ avg_count }}</label>
+                <h3>Total Tender</h3>
+            </div>
+        </div>
+        <div class="col-12 col-md-4" id="count-card2">
+            <div class="row justify-content-md-center cards">
+                <label>{{ qc_count }}</label>
+                <h3>QC Count</h3>
+            </div>
+        </div>
+        <div class="col-12 col-md-5" id="count-card3">
+            <div class="row justify-content-md-center cards">
+                <label>{{ zero_tender_count }}/{{ total_source }}</label>
+                <h3>Zero Tender Source Count</h3>
+            </div>
+        </div>
+        <div class="col-12 col-md-3" id="count-card4">
+            <div class="row justify-content-md-center cards">
+                <label>3/{{ total_source }}</label>
+                <h3>Error Count</h3>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- <div class="container" style="margin-top: 35px;"> -->
+    <input type="text" id="list_of_day" value="{{ list_of_days }}" style="display: none;">
+    <input type="text" id="Graph_tender_count" value="{{ Graph_tender_count_str }}" style="display: none;">
+    <input type="text" id="Graph_qc_count" value="{{ Graph_qc_count_str }}" style="display: none;">
+
+
+<div class="row" style="width: 100%;">
+    <div class="col-12 col-md-6" style="margin-top: 25px;  border-radius: 13px;">
+      <div style="margin-top: 10px; text-align: center;"><h4>Last 7 Days Total Tender Count</h4></div>
+      <canvas id="barChart"></canvas>
+      
+    </div>
+    <div class="col-12 col-md-6" style="margin-top: 25px; border-radius: 13px;">
+      <div style="margin-top: 10px; text-align: center;"><h4>Last 7 Days QC Count</h4></div>
+      <div id="container"></div>
+  </div>
+</div>
+<!-- </div> -->
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.js"></script>
 
 {% endblock %}
-{% block script %} {% endblock %}
+{% block script %}
+<script>
+    // function openNav() {
+    //   document.getElementById("mySidenav").style.width = "225px";
+    //   document.getElementById("mySidenav").style.backgroundColor = "#00e7ff";
+    // }
+    
+    // function closeNav() {
+    //   document.getElementById("mySidenav").style.width = "0";
+    // }
+</script>
+
+<script>
+  var list_of_day = document.getElementById("list_of_day").value;
+  var list_of_days = list_of_day.toString().split(',')
+  var Graph_qc_count = document.getElementById("Graph_qc_count").value;
+  var Graph_qc_count_list = Graph_qc_count.toString().split(',')
+  Highcharts.chart('container', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: ''
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: ''
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name} : </b> {point.y} QC'
+            }
+        }
+    },
+    series: [{
+        name: 'Tender Count',
+        colorByPoint: true,
+        data: [{
+            name: list_of_days[0],
+            y: parseInt(Graph_qc_count_list[0])
+            // sliced: false,
+            // selected: false
+        }, {
+            name: list_of_days[1],
+            y: parseInt(Graph_qc_count_list[1])
+        }, {
+            name: list_of_days[2],
+            y: parseInt(Graph_qc_count_list[2])
+        }, {
+            name: list_of_days[3],
+            y: parseInt(Graph_qc_count_list[3])
+        }, {
+            name: list_of_days[4],
+            y: parseInt(Graph_qc_count_list[4])
+        }, {
+            name: list_of_days[5],
+            y: parseInt(Graph_qc_count_list[5])
+        }]
+    }]
+  });
+</script>
+<script>
+  var DEFAULT_DATASET_SIZE = 7,
+			addedCount = 0,
+		    color = Chart.helpers.color;
+  var list_of_day = document.getElementById("list_of_day").value;
+  var list_of_days = list_of_day.toString().split(',')
+  var Graph_tender_count = document.getElementById("Graph_tender_count").value;
+  var Graph_tender_count_list = Graph_tender_count.toString().split(',')
+	var months = list_of_days;
+
+	var chartColors = {
+		red: 'rgb(255, 99, 132)',
+		orange: 'rgb(255, 159, 64)',
+		yellow: 'rgb(255, 205, 86)',
+		green: 'rgb(75, 192, 192)',
+		blue: 'rgb(54, 162, 235)',
+		purple: 'rgb(153, 102, 255)',
+		grey: 'rgb(231,233,237)'
+	};
+
+
+var barData = {
+			labels: list_of_days,
+			datasets: [{
+				label: 'Total Count',
+				backgroundColor: color(chartColors.blue).alpha(0.6).rgbString(),
+				borderColor: chartColors.blue,
+				borderWidth: 1,
+				data: Graph_tender_count_list
+			}]
+
+		};
+var index = 11;
+var ctx = document.getElementById("barChart").getContext("2d");
+		var	myNewChartB = new Chart(ctx, {
+				type: 'bar',
+				data: barData,
+				options: {
+					responsive: true,
+          maintainAspectRation: true,
+					legend: {
+						position: 'top',
+					},
+					title: {
+						display: true,
+						text: ''
+					}
+				}
+			});
+
+</script>
+{% endblock %}

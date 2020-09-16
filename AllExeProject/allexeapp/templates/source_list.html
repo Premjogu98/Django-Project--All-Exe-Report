@@ -4,13 +4,6 @@
 
 {% block title %} Source List {% endblock %}
 {% block head %}
-<link rel="stylesheet" type="text/css"
-    href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
-<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
-
 {% endblock %}
 
 {% block body %}
@@ -33,6 +26,7 @@
             </thead>
             <tbody>
                 {% for source_detail in source_data_list %}
+                
                 <tr>
                     <td>{{ source_detail.1 }}</td>
                     <td>{{ source_detail.2 }}</td>
@@ -48,6 +42,7 @@
                 {% endfor %}
             </tbody>
         </table>
+
     </div>
 
     <!-- Modal -->
@@ -90,6 +85,7 @@
                                         <label for="avg_tender">AVG</label>
                                         <input type="text" name="avg_tender" class="form-control" id="avg_tender" placeholder="AVG">
                                     </div>
+                                    {% if request.COOKIES.EXEusername == "Admin" %}
                                     <div class="col-md-2 form-group">
                                         <label for="exe_run_by">EXE Run By</label>
                                         <select name="exe_run_by" class="drop" id="exe_run_by">
@@ -108,6 +104,7 @@
                                             {% endfor %}
                                         </select>
                                     </div>
+                                    {% endif %}
                                     <div class="col-md-2 form-group">
                                         <label for="Devloped_language">Devloped Language</label>
                                         <select name="Devloped_language" class="drop" id="Devloped_language">
@@ -140,10 +137,6 @@
                                         <input type="text" name="tender_url" class="form-control" id="tender_url" placeholder="http://www.tenderurl.com">
                                     </div>
                                     <div class="col-md-2 form-group">
-                                        <label for="update_date">Update Date</label><br>
-                                        <input type="date" id='update_date' name="update_date" style="width: 100%;height: 36px;"><br>
-                                      </div>
-                                    <div class="col-md-2 form-group">
                                         <label for="Last_date">Last Update</label>
                                         <label id='Last_date' style="color: red;"></label>
                                     </div>
@@ -171,14 +164,15 @@
     <footer style="margin-top: 60px;">
         
       </footer>
+      <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
 </div>
 {% endblock %}
 
 {% block script %}
 <script>
-    $(document).ready(function () {
-        $('#example').DataTable();
-    });
+    $(document).ready(function() {
+    $('#example').DataTable();
+} );
 </script>
 
 <script>
@@ -255,7 +249,6 @@
                 is_english:$('#is_english').val(),
                 status:$('#status').val(),
                 tender_url:$('#tender_url').val(),
-                update_date:$('#update_date').val(),
                 remark:$('#remark').val(),
                 csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
             },

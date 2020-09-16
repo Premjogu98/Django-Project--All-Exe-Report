@@ -7,17 +7,14 @@ import sys, os
 import time
 import json
 from django.http import JsonResponse
-import datetime
-from datetime import timedelta 
+from datetime import datetime,timedelta 
 import time
 from datetime import datetime as datetime_obj
 import re
 import csv
 from django.core.mail import send_mail
 from django.conf import settings
-
 # send email with html tags using this import
-
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -59,26 +56,114 @@ while True:
         print(e)
 
 email_user_dic = {}
+def query_fun(obj):
+    exe_DB_cursor.execute(str(obj))
+    data = exe_DB_cursor.fetchall()
+    return data
 
 def index(request):
+    try:
+        user_id  = request.COOKIES['EXEuserid']
+        EXEusername  = request.COOKIES['EXEusername']
+    except:
+        return HttpResponse('<div style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">Something Went Wrong Please LogIn Again <a href="Login-page">Click Here</a></label></div>')
+    query = ''
+    sourcename_list = []
+    avg_count = 0
+    if EXEusername == 'Admin':
+        query = "SELECT * FROM `source_master_tbl`"
+    else:
+        query = f"SELECT * FROM `source_master_tbl` WHERE exe_run_by = '{str(user_id)}'"
+    source_details = query_fun(query)
+    for i in source_details:
+        avg_count += int(i[4])
+        sourcename_list.append(str(i[2]))
+    sourcenames = str(sourcename_list).replace('[','').replace(']','')
+    
+    if EXEusername == 'Admin':
+        query = "SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE compulsary_qc = '1' AND DATE(added_on) = CURDATE() UNION ALL SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` where DATE(added_on) = CURDATE()"
+    else:
+        query = f"""SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND compulsary_qc = '1' AND DATE(added_on) = CURDATE() 
+                UNION ALL
+                SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = CURDATE()"""
+    QC_and_total_tender_details = query_fun(query)
 
-    return render(request, 'home.html')
+    if EXEusername == 'Admin':
+        query = f"SELECT source FROM `l2l_tenders_entry_tbl` WHERE DATE(added_on) = CURDATE()"
+    else:
+        query = f"SELECT source FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = CURDATE()"
+    Zero_tender_details = query_fun(query)
+    zero_tender_source_list = []
+    for a in Zero_tender_details:
+        if not a[0] in zero_tender_source_list:
+            zero_tender_source_list.append(str(a[0]))
+    count = int(len(sourcename_list)) - int(len(zero_tender_source_list))
+
+    list_of_days_str = ''
+    Graph_tender_count_str = ''
+    Graph_qc_count_str = ''
+    list_of_days = []
+    i = 1
+    while True:
+        date = datetime.today() - timedelta(days=i)
+        day = date.strftime('%d-%b')
+        qday = date.strftime('%Y-%m-%d')
+        week = date.strftime('%a')
+        main = f'{str(day)} {week}'
+        list_of_days.append(main)
+        i +=1
+        if not 'Sun' in main:
+            list_of_days_str += f'{main},'
+            if EXEusername == 'Admin':
+                query = f"""SELECT count(*) FROM `l2l_tenders_entry_tbl` WHERE DATE(added_on) = '{str(qday)}'
+                        UNION ALL
+                        SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE compulsary_qc = '1' AND DATE(added_on) = '{str(qday)}'"""
+            else:
+                query = f"""SELECT count(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = '{str(qday)}'
+                        UNION ALL
+                        SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND compulsary_qc = '1' AND DATE(added_on) = '{str(qday)}'"""
+            Graph_tender_count = query_fun(query)
+            Graph_tender_count_str += f'{Graph_tender_count[0][0]},'
+            Graph_qc_count_str += f'{Graph_tender_count[1][0]},'
+        if i>7:
+            break
+    list_of_days_str = list_of_days_str.rstrip(',')
+    Graph_tender_count_str = Graph_tender_count_str.rstrip(',')
+    Graph_qc_count_str = Graph_qc_count_str.rstrip(',')
+    # print(Graph_tender_count)
+    print(Graph_tender_count_str)
+    print(Graph_qc_count_str)
+    detail_dic = {'total_source': len(source_details), 'qc_count':QC_and_total_tender_details[0][0],'total_tender_count' : QC_and_total_tender_details[1][0],'avg_count' : avg_count,'zero_tender_count' : count ,'list_of_days':list_of_days_str,'Graph_tender_count_str':Graph_tender_count_str,'Graph_qc_count_str': Graph_qc_count_str}
+    return render(request, 'home.html',detail_dic)
+    # return render(request, 'home.html')
 
 def source_list(request):
-    exe_DB_cursor.execute("""SELECT sm.id,sm.source_no,sm.source_name,sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+    try:
+        user_id  = request.COOKIES['EXEuserid']
+        EXEusername  = request.COOKIES['EXEusername']
+    except:
+        return HttpResponse('<div style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">Something Went Wrong Please LogIn Again <a href="Login-page">Click Here</a></label></div>')
+
+    if EXEusername == 'Admin':
+        exe_DB_cursor.execute("""SELECT sm.id,sm.source_no,sm.source_name,sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
                             INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
                             INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id order by sm.id ASC""")
+    else:
+        exe_DB_cursor.execute(f"""SELECT sm.id,sm.source_no,sm.source_name,sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id WHERE er.user_id = '{str(user_id)}' order by sm.id ASC""")
+
     source_data_list = exe_DB_cursor.fetchall()
     source_data_list = list(source_data_list)
     source_data_list = [list(tup) for tup in source_data_list]
     # print(exe_runby_data)
     source_details = {'source_data_list': source_data_list,'exe_runby_list':exe_runby_data,'Country_ISO_list':Country_ISO_data,'exe_developer_list': exe_developer_data,}
-
     return render(request, 'source_list.html',source_details)
-
+    
 def loadmodel_data(request):
     if request.method == 'POST':
         id = request.POST['id']
+        # print(id)
         exe_DB_cursor.execute(f"SELECT * FROM source_master_tbl WHERE id = '{str(id).strip()}'")
         data = exe_DB_cursor.fetchall()
         # data = list(data)
@@ -112,29 +197,27 @@ def update_model(request):
         # print(tender_url)
         remark = request.POST['remark']
         # print(remark)
-        update_date = request.POST['update_date']
         
-        if update_date != '':
-            now = datetime_obj.now()
-            time = now.strftime("%H:%M:%S")
-            main_update_date = update_date + " " + time
-            update_date_timestamp = datetime.datetime.strptime(main_update_date, '%Y-%m-%d %H:%M:%S')
-            print(type(update_date_timestamp))
-            if source_no == '' or source_name == '' or remark == '' or tender_url == '' or contry_iso == '' or avg_tender == '' or exe_run_by == '' or exe_developer == '' or is_english == '' or status == '' or Devloped_language == '':
-                return HttpResponse('All Fields Are Required !!!')
+        
+        
+        now = datetime_obj.now()
+        # time = now.strftime("%H:%M:%S")
+        # main_update_date = update_date + " " + time
+        update_date_timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
+        print(type(update_date_timestamp))
+        if source_no == '' or source_name == '' or remark == '' or tender_url == '' or contry_iso == '' or avg_tender == '' or exe_run_by == '' or exe_developer == '' or is_english == '' or status == '' or Devloped_language == '':
+            return HttpResponse('All Fields Are Required !!!')
 
-            elif not source_no.isdigit():
-                return HttpResponse('Source number allow only Digit !!!')
+        elif not source_no.isdigit():
+            return HttpResponse('Source number allow only Digit !!!')
 
-            elif not avg_tender.isdigit():
-                return HttpResponse('AVG Tender allow only Digit !!!')
-            else:
-                update_query = f"UPDATE exes_manage_db.source_master_tbl SET source_no = '{str(source_no).strip()}', source_name = '{str(source_name).strip()}', country_iso = '{str(contry_iso).strip()}', avg_tender = '{str(avg_tender).strip()}', exe_run_by = '{str(exe_run_by).strip()}', exe_developer = '{str(exe_developer).strip()}', develop_language = '{str(Devloped_language).strip()}', is_english = '{str(is_english).strip()}', status = '{str(status).strip()}', updated_on = '{update_date_timestamp}', tender_url = '{str(tender_url).strip()}', remark = '{str(remark).strip()}' WHERE id = {str(rowid).strip()}"
-                exe_DB_cursor.execute(update_query)
-                connection.commit()
-                return HttpResponse('Update Data')
+        elif not avg_tender.isdigit():
+            return HttpResponse('AVG Tender allow only Digit !!!')
         else:
-            return HttpResponse('Please Select When You Update Data !!!')
+            update_query = f"UPDATE exes_manage_db.source_master_tbl SET source_no = '{str(source_no).strip()}', source_name = '{str(source_name).strip()}', country_iso = '{str(contry_iso).strip()}', avg_tender = '{str(avg_tender).strip()}', exe_run_by = '{str(exe_run_by).strip()}', exe_developer = '{str(exe_developer).strip()}', develop_language = '{str(Devloped_language).strip()}', is_english = '{str(is_english).strip()}', status = '{str(status).strip()}', updated_on = '{update_date_timestamp}', tender_url = '{str(tender_url).strip()}', remark = '{str(remark).strip()}' WHERE id = {str(rowid).strip()}"
+            exe_DB_cursor.execute(update_query)
+            connection.commit()
+            return HttpResponse('Update Data')
 
 def Add_source(request):
     
@@ -192,8 +275,17 @@ def Add_source(request):
     return render(request, 'Add_source.html',test_data)
 
 def source_details(request):
+    try:
+        user_id  = request.COOKIES['EXEuserid']
+        EXEusername  = request.COOKIES['EXEusername']
+    except:
+        return HttpResponse('<div style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">Something Went Wrong Please LogIn Again <a href="Login-page">Click Here</a></label></div>')
+
     exe_DB_cursor = connection.cursor()
-    exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
+    if EXEusername != 'Admin':
+        exe_DB_cursor.execute(f'SELECT source_name FROM exes_manage_db.source_master_tbl WHERE exe_run_by="{str(user_id)}"')
+    else:
+        exe_DB_cursor.execute(f'SELECT source_name FROM exes_manage_db.source_master_tbl')
     data = exe_DB_cursor.fetchall()
     source_list = [list(tup) for tup in data]
     # print(source_list)
@@ -216,23 +308,23 @@ def source_details(request):
         print(source_list_text)
         print(from_date)
         print(to_date)
+        where_condition = ""
         if source_list_text != '':
             source_list_text = source_list_text.replace(',',',,')
             selected_source_list = source_list_text.split(',,')
             source_list = str(selected_source_list).replace('[','').replace(']','')
-            exe_DB_cursor.execute(f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                                    INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                                    INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
-                                    WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC""")
+            where_condition = f"WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC"
         else:
-            exe_DB_cursor.execute("""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id order BY sm.id ASC""")
-        data = exe_DB_cursor.fetchall()
+            if EXEusername != 'Admin':
+                where_condition = f"WHERE er.user_id = '{str(user_id)}' order BY sm.id ASC"
+            else:
+                where_condition = "order BY sm.id ASC"
+        query = f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                    INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                    INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id {where_condition}"""
+        data = query_fun(query)
         source_data_list = list(data)
         source_data_list = [list(tup) for tup in source_data_list]
-
-        # print(source_data_list)
 
         if from_date != "" and to_date != "":
             table_html = ''
@@ -241,8 +333,8 @@ def source_details(request):
             main_total_count_list = []
             all_total_tr = ''
             all_total_count = 0
-            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
-            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
+            from_date_obj = datetime_obj.strptime(str(from_date), '%Y-%m-%d')
+            to_date_datetime_obj = datetime_obj.strptime(str(to_date), '%Y-%m-%d')
             diff_date = to_date_datetime_obj - from_date_obj
             diff_date = diff_date.days
 
@@ -251,10 +343,10 @@ def source_details(request):
                 table_th += f"<th>{str(date_month)}</th>"
                 from_date_obj = from_date_obj + timedelta(days=1)
             
-            for source_name in source_data_list[0:10]:
+            for source_name in source_data_list:
                 m_count_td  = ''
                 m_source_count = 0
-                from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
+                from_date_obj = datetime_obj.strptime(str(from_date), '%Y-%m-%d') 
                 total_count_list = []
                 for date in range(int(diff_date)+1):
                     main_date = from_date_obj.strftime("%Y-%m-%d")
@@ -317,7 +409,7 @@ def source_details(request):
             main_total = 0
             now = datetime_obj.now()
             main_date = now.strftime("%d-%B-%Y")
-            for source_name in source_data_list[0:10]:
+            for source_name in source_data_list:
                 m_count_td  = ''
                 m_source_count = 0
                 a = 0 
@@ -367,164 +459,12 @@ def source_details(request):
         
     return render(request, 'source_details.html',data)
 
-def All_source_details(request):
-    
-    # exe_DB_cursor = connection.cursor()
-    # exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
-    # data = exe_DB_cursor.fetchall()
-    # source_list = [list(tup) for tup in data]
-    
-    exe_DB_cursor = connection.cursor()
-    exe_DB_cursor.execute("""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id order by sm.id ASC""")
-    source_data_list = exe_DB_cursor.fetchall()
-    source_data_list = list(source_data_list)
-    source_data_list = [list(tup) for tup in source_data_list]
-    # print(source_data_list)
-    if request.method == 'POST':
-        from_date = request.POST['from_date']
-        to_date = request.POST['to_date']
-        if from_date != "" and to_date != "":
-            table_html = ''
-            table_th = ""
-            source_name_with_count = ''
-            main_total_count_list = []
-            all_total_tr = ''
-            all_total_count = 0
-
-            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') # get date from datepicker like this 2020-08-14 and convert into datetime object
-            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d') # # get date from datepicker like this 2020-08-16 and convert into datetime object
-            diff_date = to_date_datetime_obj - from_date_obj # To date minus from from date
-            diff_date = diff_date.days # Then get diff between two dates like 2020-08-16 - 2020-08-14 = 3
-
-            for date in range(int(diff_date)+1):  # add diff date on loop to run 
-                date_month = from_date_obj.strftime("%d-%b") # From date convert into string with some date formate like this 14-Aug
-                table_th += f"<th>{str(date_month)}</th>" # add th tag on top off tbody like this <th>14-Aug</th> 
-                from_date_obj = from_date_obj + timedelta(days=1) # add one date on from date like 2020-08-14 + 1day = 2020-08-15 
-            
-            for source_name in source_data_list[0:10]:  # total source list with detail
-                m_count_td  = ''
-                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
-                m_source_count = 0
-                from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
-
-                total_count_list = []
-                for date in range(int(diff_date)+1):
-                    main_date = from_date_obj.strftime("%Y-%m-%d")  # change the formate of from date
-                    a = 0 
-                    while a == 0 :
-                        try:
-                            exe_DB_cursor = connection.cursor()
-                            exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND DATE(added_on) = '{str(main_date).strip()}'")
-                            data = exe_DB_cursor.fetchone()
-                            data_list = list(data)
-                            total_count_list.append(f'{data_list[0]}')
-                            m_count_td += f'<td>{data_list[0]}</td>'
-                            m_source_count += int(data_list[0])
-                            a = 1
-                        except Exception as e:
-                            print(e)
-                            connection.close()
-                            time.sleep(2)
-                            a = 0 
-                    print(f'Done: {source_name[0]}')
-                    from_date_obj = from_date_obj + timedelta(days=1)
-                main_total_count_list.append(total_count_list)
-                all_total_count += m_source_count
-                if m_source_count != 0:
-                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
-                else:
-                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
- 
-            # print(main_total_count_list)
-            index_no = 0
-            for date in range(int(diff_date)+1):
-                total_count = 0
-                for count_list in main_total_count_list:
-                    total_count += int(count_list[index_no])
-                all_total_tr += f'<td>{str(total_count)}</td>'
-                index_no +=1
-
-            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
-
-            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Source Details From: {from_date} To: {to_date}</h4></div><table id="main_table" name="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;>
-                        <thead>
-                            <tr style="background: #00e7ff;">
-                                <th>Source Name</th>
-                                <th>EXE Run By</th>
-                                <th>EXE Developer</th>
-                                {str(table_th)}
-                                <th>Total</th> 
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {str(source_name_with_count)}
-                            <tr class="Total"><td>Total</td><td></td><td></td>{str(all_total_tr)}<td>{str(all_total_count)}</td></tr>
-                        </tbody>
-                    </table>"""
-            return JsonResponse(str(table_html), safe=False)
-        
-        else :
-            source_name_with_count = ""
-            main_source_total = 0
-            main_total = 0
-            now = datetime_obj.now()
-            main_date = now.strftime("%d-%B-%Y")
-            for source_name in source_data_list[0:10]:
-                m_count_td  = ''
-                # m_source_name_count = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>'
-                m_source_count = 0
-                a = 0 
-                while a == 0 :
-                    try:
-                        exe_DB_cursor = connection.cursor()
-                        exe_DB_cursor.execute(f"SELECT COUNT(*) AS source_count FROM `l2l_tenders_entry_tbl` WHERE source = '{str(source_name[0]).strip()}' AND DATE(added_on) = CURDATE()")
-                        data = exe_DB_cursor.fetchone()
-                        data_list = list(data)
-                        m_count_td += f'<td>{data_list[0]}</td>'
-                        m_source_count += int(data_list[0])
-                        main_source_total += m_source_count
-                        main_total += m_source_count
-                        a = 1
-                    except Exception as e:
-                        print(e)
-                        connection.close()
-                        time.sleep(2)
-                        a = 0 
-                print(f'Done: {source_name[0]}')
-                if m_source_count != 0:
-                    source_name_with_count  += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
-                else:
-                    source_name_with_count  += f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
-
-            # MOST IMP NOTE When You change your html table tag then you need also do some changes on  funtion(Export_csv)
-
-            table_html =  f"""<div class="d-flex justify-content-start"><h4 class="source-list-h">Source Details Of Current Date: {main_date}</h4></div><table id="main_table" class="table table-hover" style="text-align: left; margin-top: 25px;">
-                        <thead>
-                            <tr>
-                                <th>Source Name</th>
-                                <th>EXE Run By</th>
-                                <th>EXE Developer</th>
-                                <th>{str(main_date)}</th> 
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {str(source_name_with_count)}
-                            <tr class="Total"><td>Total</td><td></td><td></td><td>{str(main_source_total)}</td><td>{str(main_total)}</td></tr>
-                        </tbody>
-                    </table>"""
-            
-            return JsonResponse(str(table_html), safe=False)
-
 def Export_csv(request):
     if request.method == 'POST':
         now = datetime_obj.now()
         main_date = now.strftime("%d%m%Y%H%M")
         response = HttpResponse(content_type='text/csv')
         main_table = request.POST['html_table_input']
-        # print(main_table)
         main_table = main_table.replace('\n',' ')
         main_table = re.sub("\s+" , " ", main_table)
         Th_list = re.findall(r"(?<=<th>).*?(?=</th>)", main_table)
@@ -549,61 +489,48 @@ def Export_csv(request):
         return response
 
 def zero_count(request):
+    try:
+        user_id  = request.COOKIES['EXEuserid']
+        EXEusername  = request.COOKIES['EXEusername']
+    except:
+        return HttpResponse('<div style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">Something Went Wrong Please LogIn Again <a href="Login-page">HomePage</a></label></div>')
 
     if request.method == 'POST':
         Category = request.POST['Category']
         from_date = request.POST['from_date']
         to_date = request.POST['to_date']
+        where_query = ''
+        if EXEusername != "Admin":
+            if Category == 'IN':
+                where_query = f"WHERE sm.country_iso = 'IN' AND er.user_id = '{str(user_id)}'"
+            elif Category == 'none-in':
+                where_query = f"WHERE sm.country_iso <> 'IN' AND er.user_id = '{str(user_id)}'"
+            elif Category == 'all':
+                where_query = f"WHERE er.user_id = '{str(user_id)}'"
+        else:
+            if Category == 'IN':
+                where_query = f"WHERE sm.country_iso = 'IN'"
+            elif Category == 'none-in':
+                where_query = f"WHERE sm.country_iso <> 'IN'"
+            elif Category == 'all':
+                where_query = ""
         
-        if Category == 'IN':
-            a = 0 
-            while a == 0:
-                try:
-                    exe_DB_cursor = connection.cursor()
-                    exe_DB_cursor.execute(f"""SELECT sm.source_name,sm.country_iso,sm.avg_tender,CASE sm.status WHEN '1' THEN 'Working' WHEN '2' THEN 'GTS Maintenance' WHEN '3' THEN 'Website Issue' WHEN '4' THEN 'GTS Stopped' ELSE '-' END AS `status`,
-                                            sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
-                                            WHERE sm.country_iso = 'IN'
-                                            ORDER BY avg_tender DESC""")
-                    a = 1
-                except Exception as e:
-                    print(e)
-                    connection.close()
-                    time.sleep(2)
-                    a = 0  
-        elif Category == 'none-in':
-            a = 0 
-            while a == 0:
-                try:
-                    exe_DB_cursor = connection.cursor()
-                    exe_DB_cursor.execute(f"""SELECT sm.source_name,sm.country_iso,sm.avg_tender,CASE sm.status WHEN '1' THEN 'Working' WHEN '2' THEN 'GTS Maintenance' WHEN '3' THEN 'Website Issue' WHEN '4' THEN 'GTS Stopped' ELSE '-' END AS `status`,
-                                            sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
-                                            WHERE sm.country_iso <> 'IN'
-                                            ORDER BY avg_tender DESC""")
-                    a = 1
-                except Exception as e:
-                    print(e)
-                    connection.close()
-                    time.sleep(2)
-                    a = 0                        
-        elif Category == 'all':
-            a = 0 
-            while a == 0:
-                try:
-                    exe_DB_cursor = connection.cursor()
-                    exe_DB_cursor.execute(f"""SELECT sm.source_name,sm.country_iso,sm.avg_tender,CASE sm.status WHEN '1' THEN 'Working' WHEN '2' THEN 'GTS Maintenance' WHEN '3' THEN 'Website Issue' WHEN '4' THEN 'GTS Stopped' ELSE '-' END AS `status`,
-                                            sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id ORDER BY avg_tender DESC""")
-                    a = 1
-                except Exception as e:
-                    print(e)
-                    connection.close()
-                    time.sleep(2)
-                    a = 0
+        a = 0 
+        while a == 0:
+            try:
+                exe_DB_cursor = connection.cursor()
+                exe_DB_cursor.execute(f"""SELECT sm.source_name,sm.country_iso,sm.avg_tender,CASE sm.status WHEN '1' THEN 'Working' WHEN '2' THEN 'GTS Maintenance' WHEN '3' THEN 'Website Issue' WHEN '4' THEN 'GTS Stopped' ELSE '-' END AS `status`,
+                                        sm.tender_url,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                        INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                        INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
+                                        {str(where_query)}
+                                        ORDER BY avg_tender DESC""")
+                a = 1
+            except Exception as e:
+                print(e)
+                connection.close()
+                time.sleep(2)
+                a = 0
 
         data = exe_DB_cursor.fetchall()
         
@@ -742,8 +669,17 @@ def Send_email(request):
             return HttpResponse('There Is No Data Found ')
      
 def QC_Detail(request):
+    try:
+        user_id  = request.COOKIES['EXEuserid']
+        EXEusername  = request.COOKIES['EXEusername']
+    except:
+        return HttpResponse('<div style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">Something Went Wrong Please LogIn Again <a href="Login-page">Click Here</a></label></div>')
+
     exe_DB_cursor = connection.cursor()
-    exe_DB_cursor.execute('SELECT source_name FROM exes_manage_db.source_master_tbl')
+    if EXEusername != 'Admin':
+        exe_DB_cursor.execute(f'SELECT source_name FROM exes_manage_db.source_master_tbl WHERE exe_run_by="{str(user_id)}"')
+    else:
+        exe_DB_cursor.execute(f'SELECT source_name FROM exes_manage_db.source_master_tbl')
     data = exe_DB_cursor.fetchall()
     source_list = [list(tup) for tup in data]
     # print(source_list)
@@ -763,20 +699,22 @@ def QC_Detail(request):
         elif top_from_date == '' and top_to_date == '':
             from_date = drop_from_date
             to_date = drop_to_date
-        print(source_list_text)
+        # print(source_list_text)
+        where_condition = ''
         if source_list_text != '':
             source_list_text = source_list_text.replace(',',',,')
             selected_source_list = source_list_text.split(',,')
             source_list = str(selected_source_list).replace('[','').replace(']','')
-            exe_DB_cursor.execute(f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                                    INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                                    INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id
-                                    WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC""")
+            where_condition = f'WHERE sm.source_name IN({source_list}) ORDER BY sm.id ASC'
         else:
-            exe_DB_cursor.execute("""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
-                            INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
-                            INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id order BY sm.id ASC""")
-        data = exe_DB_cursor.fetchall()
+            if EXEusername != 'Admin':
+                 where_condition = f"WHERE er.user_id = '{str(user_id)}' order BY sm.id ASC"
+            else:
+                where_condition = 'order BY sm.id ASC'
+        query = f"""SELECT sm.source_name,er.user_name AS EXE_RunBy,ed.developer_name AS Developer FROM `source_master_tbl` sm
+                                    INNER JOIN `exe_developer_tbl` ed ON sm.exe_developer = ed.developer_id
+                                    INNER JOIN `exe_runby_tbl` er ON sm.exe_run_by = er.user_id {where_condition}"""
+        data = query_fun(query)
         source_data_list = list(data)
         source_data_list = [list(tup) for tup in source_data_list]
 
@@ -799,8 +737,8 @@ def QC_Detail(request):
             main_total_count_list = []
             all_total_tr = ''
             all_total_count = 0
-            from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d')
-            to_date_datetime_obj = datetime.datetime.strptime(str(to_date), '%Y-%m-%d')
+            from_date_obj = datetime_obj.strptime(str(from_date), '%Y-%m-%d')
+            to_date_datetime_obj = datetime_obj.strptime(str(to_date), '%Y-%m-%d')
             diff_date = to_date_datetime_obj - from_date_obj
             diff_date = diff_date.days
 
@@ -809,10 +747,10 @@ def QC_Detail(request):
                 table_th += f"<th>{str(date_month)}</th>"
                 from_date_obj = from_date_obj + timedelta(days=1)
             
-            for source_name in source_data_list[0:10]:
+            for source_name in source_data_list:
                 m_count_td  = ''
                 m_source_count = 0
-                from_date_obj = datetime.datetime.strptime(str(from_date), '%Y-%m-%d') 
+                from_date_obj = datetime_obj.strptime(str(from_date), '%Y-%m-%d') 
                 total_count_list = []
                 for date in range(int(diff_date)+1):
                     main_date = from_date_obj.strftime("%Y-%m-%d")
@@ -836,10 +774,8 @@ def QC_Detail(request):
                     from_date_obj = from_date_obj + timedelta(days=1)
                 main_total_count_list.append(total_count_list)
                 all_total_count += m_source_count
-                if m_source_count == 0:
-                    source_name_with_count += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
-                else:
-                    tr = f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                if m_source_count != 0:
+                    tr = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
                     email_user_dic[f'{str(source_name[1])}'].append(str(tr))
                     source_name_with_count += tr
                     
@@ -877,7 +813,7 @@ def QC_Detail(request):
             main_total = 0
             now = datetime_obj.now()
             main_date = now.strftime("%d-%B-%Y")
-            for source_name in source_data_list[0:10]:
+            for source_name in source_data_list:
                 m_count_td  = ''
                 m_source_count = 0
                 a = 0 
@@ -898,10 +834,8 @@ def QC_Detail(request):
                         time.sleep(2)
                         a = 0 
                 print(f'Done: {source_name}')
-                if m_source_count == 0:
-                    source_name_with_count += f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
-                else:
-                    tr = f'<tr style="color: white;background: #ff2f2f;"><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
+                if m_source_count != 0:
+                    tr = f'<tr><td>{str(source_name[0])}</td><td>{str(source_name[1])}</td><td>{str(source_name[2])}</td>{m_count_td}<td>{m_source_count}</td></tr>'
                     email_user_dic[f'{str(source_name[1])}'].append(str(tr))
                     source_name_with_count += tr
             
@@ -927,4 +861,35 @@ def QC_Detail(request):
     return render(request, 'QC_Detail.html',data)
 
 def Login_page(request):
-    return render(request, 'login_page.html')
+    
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        print('Username: ',username)
+        print('Password: ',password)
+        exe_DB_cursor.execute(f"SELECT user_id,user_name,email_id,PASSWORD FROM `exe_runby_tbl` WHERE email_id='{str(username)}' AND PASSWORD = '{str(password)}'")
+        data = exe_DB_cursor.fetchall()
+        source_list = [list(tup) for tup in data]
+        print(source_list)
+        if len(source_list) != 0:
+            exeuser_id = str(source_list[0][0])
+            exeuser_name = str(source_list[0][1])
+            response = HttpResponse("User Login")
+            response.delete_cookie('EXEusername')
+            response.delete_cookie('EXEuserid')
+            response.set_cookie('EXEusername', exeuser_name,max_age=1200)
+            response.set_cookie('EXEuserid', exeuser_id,max_age=1200)
+            return response
+        else:
+            return HttpResponse("Error")
+    try:
+        test = request.COOKIES['EXEusername']
+        print(test)
+        return HttpResponse('<div class="alert alert-danger alert-dismissible" style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">You Are Already Login Please Logout First Then Log In Again <a href="homepage">HomePage</a></label></div>')
+    except: 
+        return render(request, 'login_page.html')
+
+def Logout(request):
+    response = HttpResponse("""<div style="background-color: #00e7ff; font-size: 21px;"><label style="color: black; font-size: 32px;">TendersOnTime </label>If You Wants To Login Again Then <a href="Login-page"> Click Here</a></div>""")
+    response.delete_cookie('EXEusername')
+    return response
