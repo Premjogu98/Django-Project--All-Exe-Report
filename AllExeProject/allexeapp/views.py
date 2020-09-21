@@ -67,75 +67,75 @@ def index(request):
         EXEusername  = request.COOKIES['EXEusername']
     except:
         return HttpResponse('<div style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">Something Went Wrong Please LogIn Again <a href="Login-page">Click Here</a></label></div>')
-    query = ''
-    sourcename_list = []
-    avg_count = 0
-    if EXEusername == 'Admin':
-        query = "SELECT * FROM `source_master_tbl`"
-    else:
-        query = f"SELECT * FROM `source_master_tbl` WHERE exe_run_by = '{str(user_id)}'"
-    source_details = query_fun(query)
-    for i in source_details:
-        avg_count += int(i[4])
-        sourcename_list.append(str(i[2]))
-    sourcenames = str(sourcename_list).replace('[','').replace(']','')
+    # query = ''
+    # sourcename_list = []
+    # avg_count = 0
+    # if EXEusername == 'Admin':
+    #     query = "SELECT * FROM `source_master_tbl`"
+    # else:
+    #     query = f"SELECT * FROM `source_master_tbl` WHERE exe_run_by = '{str(user_id)}'"
+    # source_details = query_fun(query)
+    # for i in source_details:
+    #     avg_count += int(i[4])
+    #     sourcename_list.append(str(i[2]))
+    # sourcenames = str(sourcename_list).replace('[','').replace(']','')
     
-    if EXEusername == 'Admin':
-        query = "SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE compulsary_qc = '1' AND DATE(added_on) = CURDATE() UNION ALL SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` where DATE(added_on) = CURDATE()"
-    else:
-        query = f"""SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND compulsary_qc = '1' AND DATE(added_on) = CURDATE() 
-                UNION ALL
-                SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = CURDATE()"""
-    QC_and_total_tender_details = query_fun(query)
+    # if EXEusername == 'Admin':
+    #     query = "SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE compulsary_qc = '1' AND DATE(added_on) = CURDATE() UNION ALL SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` where DATE(added_on) = CURDATE()"
+    # else:
+    #     query = f"""SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND compulsary_qc = '1' AND DATE(added_on) = CURDATE() 
+    #             UNION ALL
+    #             SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = CURDATE()"""
+    # QC_and_total_tender_details = query_fun(query)
 
-    if EXEusername == 'Admin':
-        query = f"SELECT source FROM `l2l_tenders_entry_tbl` WHERE DATE(added_on) = CURDATE()"
-    else:
-        query = f"SELECT source FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = CURDATE()"
-    Zero_tender_details = query_fun(query)
-    zero_tender_source_list = []
-    for a in Zero_tender_details:
-        if not a[0] in zero_tender_source_list:
-            zero_tender_source_list.append(str(a[0]))
-    count = int(len(sourcename_list)) - int(len(zero_tender_source_list))
+    # if EXEusername == 'Admin':
+    #     query = f"SELECT source FROM `l2l_tenders_entry_tbl` WHERE DATE(added_on) = CURDATE()"
+    # else:
+    #     query = f"SELECT source FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = CURDATE()"
+    # Zero_tender_details = query_fun(query)
+    # zero_tender_source_list = []
+    # for a in Zero_tender_details:
+    #     if not a[0] in zero_tender_source_list:
+    #         zero_tender_source_list.append(str(a[0]))
+    # count = int(len(sourcename_list)) - int(len(zero_tender_source_list))
 
-    list_of_days_str = ''
-    Graph_tender_count_str = ''
-    Graph_qc_count_str = ''
-    list_of_days = []
-    i = 1
-    while True:
-        date = datetime.today() - timedelta(days=i)
-        day = date.strftime('%d-%b')
-        qday = date.strftime('%Y-%m-%d')
-        week = date.strftime('%a')
-        main = f'{str(day)} {week}'
-        list_of_days.append(main)
-        i +=1
-        if not 'Sun' in main:
-            list_of_days_str += f'{main},'
-            if EXEusername == 'Admin':
-                query = f"""SELECT count(*) FROM `l2l_tenders_entry_tbl` WHERE DATE(added_on) = '{str(qday)}'
-                        UNION ALL
-                        SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE compulsary_qc = '1' AND DATE(added_on) = '{str(qday)}'"""
-            else:
-                query = f"""SELECT count(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = '{str(qday)}'
-                        UNION ALL
-                        SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND compulsary_qc = '1' AND DATE(added_on) = '{str(qday)}'"""
-            Graph_tender_count = query_fun(query)
-            Graph_tender_count_str += f'{Graph_tender_count[0][0]},'
-            Graph_qc_count_str += f'{Graph_tender_count[1][0]},'
-        if i>7:
-            break
-    list_of_days_str = list_of_days_str.rstrip(',')
-    Graph_tender_count_str = Graph_tender_count_str.rstrip(',')
-    Graph_qc_count_str = Graph_qc_count_str.rstrip(',')
-    # print(Graph_tender_count)
-    print(Graph_tender_count_str)
-    print(Graph_qc_count_str)
-    detail_dic = {'total_source': len(source_details), 'qc_count':QC_and_total_tender_details[0][0],'total_tender_count' : QC_and_total_tender_details[1][0],'avg_count' : avg_count,'zero_tender_count' : count ,'list_of_days':list_of_days_str,'Graph_tender_count_str':Graph_tender_count_str,'Graph_qc_count_str': Graph_qc_count_str}
-    return render(request, 'home.html',detail_dic)
-    # return render(request, 'home.html')
+    # list_of_days_str = ''
+    # Graph_tender_count_str = ''
+    # Graph_qc_count_str = ''
+    # list_of_days = []
+    # i = 1
+    # while True:
+    #     date = datetime.today() - timedelta(days=i)
+    #     day = date.strftime('%d-%b')
+    #     qday = date.strftime('%Y-%m-%d')
+    #     week = date.strftime('%a')
+    #     main = f'{str(day)} {week}'
+    #     list_of_days.append(main)
+    #     i +=1
+    #     if not 'Sun' in main:
+    #         list_of_days_str += f'{main},'
+    #         if EXEusername == 'Admin':
+    #             query = f"""SELECT count(*) FROM `l2l_tenders_entry_tbl` WHERE DATE(added_on) = '{str(qday)}'
+    #                     UNION ALL
+    #                     SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE compulsary_qc = '1' AND DATE(added_on) = '{str(qday)}'"""
+    #         else:
+    #             query = f"""SELECT count(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND DATE(added_on) = '{str(qday)}'
+    #                     UNION ALL
+    #                     SELECT COUNT(*) FROM `l2l_tenders_entry_tbl` WHERE source IN({str(sourcenames)}) AND compulsary_qc = '1' AND DATE(added_on) = '{str(qday)}'"""
+    #         Graph_tender_count = query_fun(query)
+    #         Graph_tender_count_str += f'{Graph_tender_count[0][0]},'
+    #         Graph_qc_count_str += f'{Graph_tender_count[1][0]},'
+    #     if i>7:
+    #         break
+    # list_of_days_str = list_of_days_str.rstrip(',')
+    # Graph_tender_count_str = Graph_tender_count_str.rstrip(',')
+    # Graph_qc_count_str = Graph_qc_count_str.rstrip(',')
+    # # print(Graph_tender_count)
+    # print(Graph_tender_count_str)
+    # print(Graph_qc_count_str)
+    # detail_dic = {'total_source': len(source_details), 'qc_count':QC_and_total_tender_details[0][0],'total_tender_count' : QC_and_total_tender_details[1][0],'avg_count' : avg_count,'zero_tender_count' : count ,'list_of_days':list_of_days_str,'Graph_tender_count_str':Graph_tender_count_str,'Graph_qc_count_str': Graph_qc_count_str}
+    # return render(request, 'home.html',detail_dic)
+    return render(request, 'home.html')
 
 def source_list(request):
     try:
@@ -861,16 +861,14 @@ def QC_Detail(request):
     return render(request, 'QC_Detail.html',data)
 
 def Login_page(request):
-    
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
         print('Username: ',username)
         print('Password: ',password)
-        exe_DB_cursor.execute(f"SELECT user_id,user_name,email_id,PASSWORD FROM `exe_runby_tbl` WHERE email_id='{str(username)}' AND PASSWORD = '{str(password)}'")
+        exe_DB_cursor.execute(f"SELECT user_id,user_name,email_id,PASSWORD FROM `exe_runby_tbl` WHERE email_id='{str(username)}' OR user_name='{str(username)}' AND PASSWORD = '{str(password)}'")
         data = exe_DB_cursor.fetchall()
         source_list = [list(tup) for tup in data]
-        print(source_list)
         if len(source_list) != 0:
             exeuser_id = str(source_list[0][0])
             exeuser_name = str(source_list[0][1])
@@ -885,11 +883,11 @@ def Login_page(request):
     try:
         test = request.COOKIES['EXEusername']
         print(test)
-        return HttpResponse('<div class="alert alert-danger alert-dismissible" style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">You Are Already Login Please Logout First Then Log In Again <a href="homepage">HomePage</a></label></div>')
+        return HttpResponse('<div class="alert alert-danger alert-dismissible" style="background-color: #00e7ff; height: 10%; font-size: 20px;">&#128545<strong>Error!</strong> <label style="font-size: 25px;">You Are Already Login Please Logout Go To <a href="homepage">HomePage</a></label></div>')
     except: 
         return render(request, 'login_page.html')
 
 def Logout(request):
-    response = HttpResponse("""<div style="background-color: #00e7ff; font-size: 21px;"><label style="color: black; font-size: 32px;">TendersOnTime </label>If You Wants To Login Again Then <a href="Login-page"> Click Here</a></div>""")
+    response = HttpResponse("""<div style="background-color: #00e7ff;"><label style="color: black; font-size: 32px;">TendersOnTime </label> <label>If You Wants To Login Again Then</label> <a href="Login-page"> Click Here</a></div>""")
     response.delete_cookie('EXEusername')
     return response

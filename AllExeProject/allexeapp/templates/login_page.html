@@ -6,12 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" type="image/png" href="https://www.tendersontime.com/images/tot_fav icon.png">
     <title>TOT | Login Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="{% static 'css/stylesheet.css' %}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 <body>
     {% csrf_token %}
-    <div class="p-3 mb-2 text-bl" style="background-color: #00e7ff;"><label style="color: black; font-size: 20px;">TendersOnTime</label></div>
+    <div style="background-color: black;">
+        <div class="row" id="top-nav">
+          <div class="col-5 col-md-5">
+            <a href="#" class="top-nav-fa fa fa-facebook" style="font-size: 18px;"></a>
+            <a href="#" class="top-nav-fa fa fa-twitter" style="font-size: 18px;"></a>
+            <a href="#" class="top-nav-fa fa fa-google" style="font-size: 18px;"></a>
+            <a href="#" class="top-nav-fa fa fa-instagram" style="font-size: 18px;"></a>
+            <a href="#" class="top-nav-fa fa fa-pinterest" style="font-size: 18px;"></a>
+          </div>
+          <div class="col-7 col-md-7" style="text-align: end;"><label id="brand-name">TendersOnTime</label></div>
+        </div>
+      </div>
     <div class="container" style="margin-top: 60px;">
         <div class="row justify-content-md-center">
             <div class="col-md-auto" >
