@@ -82,6 +82,11 @@ height: 100px;
   margin: 12px 27px 0px 22px; 
   box-shadow: 0px 4px 10px #888888;
 }
+.scroll-div{
+  height: 325px;
+  width: 98%;
+  overflow-y: scroll;
+}
 
 .source-list-footer {
     bottom: 0;
@@ -135,53 +140,7 @@ height: 100px;
 }
 body {
 
-  transition: background-color .5s;
-}
-
-.sidenav {
-  height: 100%;
-  width: 0;
-  position: fixed;
-  z-index: 1;
-  top: 64px;
-  left: 0;
-  background-color: white;
-  overflow-x: hidden;
   transition: 0.5s;
-  padding-top: 60px;
-  text-align: center;
-}
-
-.sidenav a {
-  padding: 8px 0px 15px 0px;
-  text-decoration: none;
-  font-size: 25px;
-  color: #000000;
-  display: block;
-  transition: 0.3s;
-}
-
-.sidenav a:hover {
-  color:#4b00ff;
-  text-decoration: none;
-}
-
-.sidenav .closebtn {
-  position: absolute;
-  top: 0;
-  right: 25px;
-  font-size: 36px;
-  margin-left: 50px;
-}
-
-#main {
-  transition: margin-left .5s;
-  padding: 16px;
-}
-
-@media screen and (max-height: 450px) {
-  .sidenav {padding-top: 15px;}
-  .sidenav a {font-size: 18px;}
 }
 
 #count-card1{background-color: #5f5fff; border-radius: 5px;margin: 3px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0%), 0 6px 20px 0 rgba(0, 0, 0, 0.19); cursor: pointer;}
@@ -261,45 +220,6 @@ min-width: 50px;
   padding-top: 60px;
 }
 
-.sidenav a {
-  padding: 8px 8px 8px 32px;
-  text-decoration: none;
-  font-size: 20px;
-  color: #0374ff;
-  display: block;
-  transition: 0.3s;
-}
-.menu a{
-  padding: 8px 8px 8px 32px;
-  text-decoration: none;
-  font-size: 18px;
-  color: #0374ff;
-  display: block;
-  transition: 0.3s;
-}
-
-.sidenav a:hover {
-  color:black;
-  text-decoration: none;
-}
-
-.sidenav .closebtn {
-  position: absolute;
-  top: 0;
-  right: 25px;
-  font-size: 36px;
-  margin-left: 50px;
-}
-
-#main {
-  transition: margin-left .5s;
-  padding: 16px;
-}
-
-@media screen and (max-height: 100%) {
-  .sidenav {padding-top: 15px;}
-  .sidenav a {font-size: 18px;}
-}
 .top-nav-fa {
     padding: 4px;
     font-size: 30px;
@@ -344,6 +264,7 @@ min-width: 50px;
 }
 #top-nav{
   width: 100%;
+  margin: 0px;
 }
 #top-nav label{
   color: white;}
@@ -371,41 +292,76 @@ min-width: 50px;
 .nav-main-a{
   position: relative;
   display: inline-block;
-}
-.nav-main-a i{
-  padding: 2px; font-size: 20px; text-decoration: none; color: #0374ff; cursor: pointer;
-}
-.nav-main-a span{
-  color: #0374ff;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  width: 100%;
+  margin-top: 20px;
+  font-size: 20px;
 }
 .nav-main-a:hover{
   cursor: pointer; 
   text-decoration: none;
-  color:black;
 }
 
-.dropdown-content-collection {
-  display: none;
-  position: absolute;
-  background-color: white;
-  min-width: 260px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1000;
-}
 
-.dropdown-content-collection a {
-  color: #0374ff;
-  padding: 12px 25px;
-  text-decoration: none;
-  display: block;
-  text-align: start;
+.side-menu{
+  width: 220px;
+  height: 100%;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  box-shadow: 2px -2px 20px 6px rgba(0,0,0,0.2);
+  background: #ff8100;
 }
-
-.dropdown-content-collection a:hover {
-  text-decoration: none;
-  color:black;
+.side-body{
+  margin-left: 220px;
+    
 }
-
-.dropdown:hover .dropdown-content-collection {
-  display: block;
+.side-detail{
+  padding: 6px;
+}
+@media screen and (max-width: 600px) {
+  div.side-menu {
+    display: none;
+  }
+  div.side-body {
+    margin-left: 0px;
+  }
+  div.side-top-nav {
+    position: inherit;
+  }
+  div.logo-d{
+    text-align: center;
+  }
+}
+.side-top-nav{
+  position: sticky;
+    top: 0;
+    z-index: 9999;
+    box-shadow: 8px 2px 7px 4px rgba(0,0,0,0.2);
+}
+.db-title{
+  text-align: center;
+}
+.db-title label{
+  font-size: 30px;
+    font-weight: 300;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+.db-item{
+  transition: 0.4s;
+}
+.db-item:hover{
+  background: white;
+  border-radius: 5px 20px 5px;
+    color: black;
+    font-size: 22px;
+}
+.active{
+  background: white;
+  border-radius: 5px 20px 5px;
+    color: black;
+    font-size: 22px;
 }

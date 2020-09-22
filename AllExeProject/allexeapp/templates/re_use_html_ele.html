@@ -20,76 +20,47 @@
   {% block head%} {% endblock%}
   </head>
 <body>
-    {% if request.COOKIES.EXEusername %}
-    <div style="background-color: black;">
+{% if request.COOKIES.EXEusername %}
+<div class="side-menu">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 db-title">
+        <label>Dashboard</label>
+      </div>
+      <div id="Items">
+        <a href="homepage" class="nav-main-a "><div class="col-md-12 db-item">Home</div></a>
+        <a href="Add-source" class="nav-main-a"><div class="col-md-12 db-item">Add Source</div></a>
+        <a href="source-list" class="nav-main-a"><div class="col-md-12 db-item">Source List</div></a>  
+        <a href="source-details" class="nav-main-a"><div class="col-md-12 db-item">Source Details</div></a>
+        <a href="QC-Detail" class="nav-main-a"><div class="col-md-12 db-item">Qc Count</div></a>
+        <a href="Zero-count-page" class="nav-main-a"><div class="col-md-12 db-item">Zero Count</div></a>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="side-body">
+  <div class="side-top-nav">
+    <div style="background-color: #ffa500;">
       <div class="row" id="top-nav">
-        <div class="col-4 col-md-4">
+        <div class="col-12 col-md-4 logo-d">
           <a href="#" class="top-nav-fa fa fa-facebook"></a>
           <a href="#" class="top-nav-fa fa fa-twitter"></a>
           <a href="#" class="top-nav-fa fa fa-google"></a>
           <a href="#" class="top-nav-fa fa fa-instagram"></a>
           <a href="#" class="top-nav-fa fa fa-pinterest"></a>
         </div>
-        <div class="col-4 col-md-4" style="text-align: center;"><label id="brand-name">TendersOnTime</label></div>
-        <div class="col-4 col-md-4" style="text-align: end;">
-          <label><a class="nav-log-re"  href="">{{ request.COOKIES.EXEusername }}</a> / <a class="nav-log-re"href="Logout">Logout</a></label>
+        <div class="col-6 col-md-4" style="text-align: center;"><label id="brand-name">TendersOnTime</label></div>
+        <div class="col-6 col-md-4" style="text-align: end;">
+          <label style="margin-top: 6px;"><a class="nav-log-re"  href="">{{ request.COOKIES.EXEusername }}</a> / <a class="nav-log-re"href="Logout">Logout</a></label>
         </div>
       </div>
     </div>
-    <nav class="navbar navbar-expand-lg navbar-light" id="navbar">
-      <div class="navbar-toggler" style="border:none; width: 100%;">
-        <div class="row"style="width: 100%;">
-          <div class="col-12 col-md-12">
-            <span class="close-btn" onclick="openNav()">&#9776;</span>
-          </div>
-        </div>
-        <div class="row justify-content-md-center"style="width: 100%;">
-          <div class="col-12 col-md-12" style="text-align: center;">
-            <label id="brand-name">TendersOnTime</label></div>
-        </div>
-      </div>
-      <div class="collapse navbar-collapse">
-        <div class="container">
-          <div class="row justify-content-md-center" style="text-align: center;margin-top: 22px;">
-            <div class="col-sm"><a href="homepage" class="nav-main-a">HOME</a></div>
-            <div class="col-sm"><a href="Add-source" class="nav-main-a">ADD SOURCE</a></div>
-            <div class="col-sm"><a href="source-list" class="nav-main-a">SOURCE LIST</a></div>
-            <div class="col-sm"><a href="source-details" class="nav-main-a">SOURCE DETAILS</a></div>
-            <div class="col-sm"><a href="QC-Detail" class="nav-main-a">QC COUNT</a></div>
-            <div class="col-sm"><a href="Zero-count-page" class="nav-main-a">ZERO COUNT</a></div>
-            <div class="col-sm">
-              <div class="dropdown">
-                <a class="nav-main-a "><span>MORE <i class="fa fa-angle-down"></i></span></a>
-                <div class="dropdown-content-collection">
-                  <a href="#">ITEM 1</a>
-                  <a href="#">ITEM 2</a>
-                </div>
-              </div>
-          </div>
-          
-        </div>
-        </div>
-      </div> 
-    </nav>
-    <div id="mySidenav" class="sidenav" style="transition: .5s;">
-      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-      <a href="homepage">HOME</a>
-      <a href="Add-source">ADD SOURCE</a>
-      <a href="source-list">SOURCE LIST</a>
-      <a href="source-details">SOURCE DETAILS</a>
-      <a href="QC-Detail">QC COUNT</a>
-      <a href="Zero-count-page">ZERO COUNT</a>
-      <a href="#" class="menus_JS"><span>MORE <i class="fa fa-angle-down"></i></span></a>
-      <div class="menu submenus_JS" style="display: none;">
-          <a href="#">ITEM 1</a>
-          <a href="#">ITEM 2</a>
-      </div>
-    </div>
-      
-      {% block body %} {% endblock %}
-      {% else %}
-      <div class="alert alert-danger alert-dismissible">&#128545<strong>Error!</strong> SomeThing Went Wrong <a href='Login-page'>Please Login Again</a></div>
-    {% endif %}
+  </div>
+  <div class="side-detail">
+  {% block body %} {% endblock %}</div></div>
+{% else %}
+<div class="alert alert-danger alert-dismissible">&#128545<strong>Error!</strong> SomeThing Went Wrong <a href='Login-page'>Please Login Again</a></div>
+{% endif %}
 </body>
 <script>
   function openNav() {
@@ -112,6 +83,18 @@
       $(".submenus_J").toggle();
     });
 </script>
+<script>
+  // Add active class to the current button (highlight it)
+  var header = document.getElementById("Items");
+  var btns = header.getElementsByClassName("nav-main-a");
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener("click", function() {
+    var current = document.getElementsByClassName("active");
+    current[0].className = current[0].className.replace(" active", "");
+    this.className += " active";
+    });
+  }
+  </script>
 
 {% block script %}
 
